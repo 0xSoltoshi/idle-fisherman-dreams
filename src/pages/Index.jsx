@@ -15,10 +15,42 @@ const BASE_XP = 100;
 const XP_INCREMENT = 50;
 
 const fishingSpots = {
-  pond: { name: "Pond", unlockCost: 0, rareFishChance: 0.05, specialFishChance: 0, valueMultiplier: 1 },
-  lake: { name: "Lake", unlockCost: 1000, rareFishChance: 0.08, specialFishChance: 0.02, valueMultiplier: 1.5 },
-  river: { name: "River", unlockCost: 5000, rareFishChance: 0.1, specialFishChance: 0.05, valueMultiplier: 2 },
-  ocean: { name: "Ocean", unlockCost: 20000, rareFishChance: 0.15, specialFishChance: 0.1, valueMultiplier: 3 },
+  pond: {
+    name: "Pond",
+    unlockCost: 0,
+    fish: ["Carp", "Bluegill", "Catfish"],
+    rareFish: ["Golden Carp"],
+    specialFish: ["Albino Catfish"],
+    challenge: "Catch 100 Pond fish",
+    valueMultiplier: 1
+  },
+  lake: {
+    name: "Lake",
+    unlockCost: 5000,
+    fish: ["Bass", "Perch", "Trout"],
+    rareFish: ["Rainbow Trout"],
+    specialFish: ["Giant Bass"],
+    challenge: "Catch a Giant Bass",
+    valueMultiplier: 2
+  },
+  river: {
+    name: "River",
+    unlockCost: 25000,
+    fish: ["Salmon", "Pike", "Sturgeon"],
+    rareFish: ["Golden Sturgeon"],
+    specialFish: ["River Monster"],
+    challenge: "Catch 10 Golden Sturgeons",
+    valueMultiplier: 3
+  },
+  ocean: {
+    name: "Ocean",
+    unlockCost: 100000,
+    fish: ["Tuna", "Cod", "Mackerel"],
+    rareFish: ["Swordfish"],
+    specialFish: ["Great White Shark"],
+    challenge: "Catch a Great White Shark",
+    valueMultiplier: 5
+  },
 };
 
 const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPerClick, currentSpot, onChangeSpot, unlockedSpots, onNet, onTrap, netCooldown, trapCooldown, gear, money }) => {
@@ -30,10 +62,12 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
     setTimeout(() => setIsAnimating(false), 500);
   };
 
+  const currentSpotData = fishingSpots[currentSpot];
+
   return (
     <Card className="bg-blue-50 dark:bg-blue-950 transition-colors duration-200 border border-blue-200 dark:border-blue-800">
       <CardHeader>
-        <CardTitle className="text-2xl text-blue-800 dark:text-blue-200">Fishing Area</CardTitle>
+        <CardTitle className="text-2xl text-blue-800 dark:text-blue-200">Fishing Area: {currentSpotData.name}</CardTitle>
       </CardHeader>
       <CardContent>
         <Select onValueChange={onChangeSpot} value={currentSpot}>
@@ -43,7 +77,7 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
           <SelectContent>
             {Object.entries(fishingSpots).map(([key, spot]) => (
               <SelectItem key={key} value={key}>
-                {spot.name} {!unlockedSpots.includes(key) && `(Unlock: $${spot.unlockCost})`}
+                {spot.name} {!unlockedSpots.includes(key) && `(Unlock: $${spot.unlockCost.toLocaleString()})`}
               </SelectItem>
             ))}
           </SelectContent>
@@ -74,6 +108,16 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
           <p className="text-gray-700 dark:text-gray-300">Catch Chance: {(catchChance * 100).toFixed(2)}%</p>
           <p className="text-gray-700 dark:text-gray-300">Fish per Click: {fishPerClick}</p>
           <p className="text-gray-700 dark:text-gray-300">Current Money: ${money.toFixed(2)}</p>
+        </div>
+        <div className="mt-4">
+          <h3 className="font-bold text-blue-800 dark:text-blue-200">Available Fish:</h3>
+          <p className="text-gray-700 dark:text-gray-300">Common: {currentSpotData.fish.join(", ")}</p>
+          <p className="text-gray-700 dark:text-gray-300">Rare: {currentSpotData.rareFish.join(", ")}</p>
+          <p className="text-gray-700 dark:text-gray-300">Special: {currentSpotData.specialFish.join(", ")}</p>
+        </div>
+        <div className="mt-2">
+          <h3 className="font-bold text-blue-800 dark:text-blue-200">Challenge:</h3>
+          <p className="text-gray-700 dark:text-gray-300">{currentSpotData.challenge}</p>
         </div>
       </CardContent>
     </Card>
@@ -164,6 +208,10 @@ const Index = () => {
   const [rareFish, setRareFish] = useState(0);
   const [specialFish, setSpecialFish] = useState(0);
   const [money, setMoney] = useState(10);
+  const [riverGoldenSturgeonCount, setRiverGoldenSturgeonCount] = useState(0);
+  const [pondFishCount, setPondFishCount] = useState(0);
+  const [giantBassCaught, setGiantBassCaught] = useState(false);
+  const [greatWhiteSharkCaught, setGreatWhiteSharkCaught] = useState(false);
   const [fishPrices, setFishPrices] = useState({
     'Regular Fish': 1,
     'Rare Fish': 10,
@@ -377,9 +425,62 @@ const Index = () => {
     checkAchievements();
 
     // Show toast messages for catches
-    if (specialFishCaught > 0) toast.success(`You caught ${specialFishCaught} special fish! 🦈`);
-    if (rareFishCaught > 0) toast.success(`You caught ${rareFishCaught} rare fish! 🐠`);
-    if (fishCaught > 0) toast.success(`You caught ${fishCaught} fish! 🐟`);
+    if (specialFishCaught > 0) {
+      const specialFishName = spot.specialFish[Math.floor(Math.random() * spot.specialFish.length)];
+      toast.success(`You caught a ${specialFishName}! 🦈`);
+    }
+    if (rareFishCaught > 0) {
+      const rareFishName = spot.rareFish[Math.floor(Math.random() * spot.rareFish.length)];
+      toast.success(`You caught a ${rareFishName}! 🐠`);
+    }
+    if (fishCaught > 0) {
+      const fishName = spot.fish[Math.floor(Math.random() * spot.fish.length)];
+      toast.success(`You caught ${fishCaught} ${fishName}! 🐟`);
+    }
+
+    // Check for location-specific challenge completion
+    checkLocationChallenge(spot, fishCaught, rareFishCaught, specialFishCaught);
+  };
+
+  const checkLocationChallenge = (spot, fishCaught, rareFishCaught, specialFishCaught) => {
+    switch (spot.name) {
+      case "Pond":
+        setPondFishCount(prev => {
+          const newCount = prev + fishCaught;
+          if (newCount >= 100 && prev < 100) {
+            toast.success("Challenge completed: Catch 100 Pond fish!");
+            setMoney(prevMoney => prevMoney + 1000); // Reward for completing the challenge
+          }
+          return newCount;
+        });
+        break;
+      case "Lake":
+        if (specialFishCaught > 0 && !giantBassCaught) {
+          setGiantBassCaught(true);
+          toast.success("Challenge completed: Catch a Giant Bass!");
+          setMoney(prevMoney => prevMoney + 5000); // Reward for completing the challenge
+        }
+        break;
+      case "River":
+        if (rareFishCaught > 0) {
+          setRiverGoldenSturgeonCount(prev => {
+            const newCount = prev + 1;
+            if (newCount >= 10 && prev < 10) {
+              toast.success("Challenge completed: Catch 10 Golden Sturgeons!");
+              setMoney(prevMoney => prevMoney + 10000); // Reward for completing the challenge
+            }
+            return newCount;
+          });
+        }
+        break;
+      case "Ocean":
+        if (specialFishCaught > 0 && !greatWhiteSharkCaught) {
+          setGreatWhiteSharkCaught(true);
+          toast.success("Challenge completed: Catch a Great White Shark!");
+          setMoney(prevMoney => prevMoney + 50000); // Reward for completing the challenge
+        }
+        break;
+    }
   };
 
   const updateLeaderboard = (newFishCount, newMoneyEarned) => {
