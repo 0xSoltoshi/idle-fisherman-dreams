@@ -152,6 +152,7 @@ const Index = () => {
   });
   const [boatLevel, setBoatLevel] = useState(0);
   const [fishermen, setFishermen] = useState(0);
+  const [catchChance, setCatchChance] = useState(0.5); // Initial 50% catch chance
   const [specialItems, setSpecialItems] = useState({
     bait: { cost: 50, active: false, duration: 60, effect: 'catchRate', multiplier: 1.5, description: 'Increases catch rate by 50% for 60 seconds' },
     license: { cost: 100, active: false, duration: 120, effect: 'sellRate', multiplier: 2, description: 'Doubles selling price for 120 seconds' },
@@ -187,32 +188,35 @@ const Index = () => {
   const fishPerClick = 1 + boatLevel;
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      let fishCaught = 0;
-      let rareFishCaught = 0;
-      let specialFishCaught = 0;
-      const attempts = (specialItems.sonar.active ? 3 : 1) * (1 + fishermen);
-      const spot = fishingSpots[currentSpot];
-      for (let i = 0; i < attempts; i++) {
-        if (Math.random() < catchChance) {
-          if (Math.random() < spot.specialFishChance) {
-            specialFishCaught++;
-          } else if (Math.random() < spot.rareFishChance) {
-            rareFishCaught++;
-          } else {
-            fishCaught += fishPerClick;
+    // Only start automatic fishing when the player has fishermen
+    if (fishermen > 0) {
+      const interval = setInterval(() => {
+        let fishCaught = 0;
+        let rareFishCaught = 0;
+        let specialFishCaught = 0;
+        const attempts = (specialItems.sonar.active ? 3 : 1) * fishermen;
+        const spot = fishingSpots[currentSpot];
+        for (let i = 0; i < attempts; i++) {
+          if (Math.random() < catchChance) {
+            if (Math.random() < spot.specialFishChance) {
+              specialFishCaught++;
+            } else if (Math.random() < spot.rareFishChance) {
+              rareFishCaught++;
+            } else {
+              fishCaught += fishPerClick;
+            }
           }
         }
-      }
-      if (fishCaught > 0 || rareFishCaught > 0 || specialFishCaught > 0) {
-        setFish(prevFish => prevFish + fishCaught);
-        setRareFish(prevRareFish => prevRareFish + rareFishCaught);
-        setSpecialFish(prevSpecialFish => prevSpecialFish + specialFishCaught);
-        setTotalFishCaught(prevTotal => prevTotal + fishCaught + rareFishCaught + specialFishCaught);
-        checkAchievements();
-      }
-    }, 1000);
-    return () => clearInterval(interval);
+        if (fishCaught > 0 || rareFishCaught > 0 || specialFishCaught > 0) {
+          setFish(prevFish => prevFish + fishCaught);
+          setRareFish(prevRareFish => prevRareFish + rareFishCaught);
+          setSpecialFish(prevSpecialFish => prevSpecialFish + specialFishCaught);
+          setTotalFishCaught(prevTotal => prevTotal + fishCaught + rareFishCaught + specialFishCaught);
+          checkAchievements();
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    }
   }, [catchChance, specialItems.sonar.active, fishermen, fishPerClick, currentSpot]);
 
   useEffect(() => {
@@ -264,37 +268,56 @@ const Index = () => {
   };
 
   const handleFish = () => {
-    if (Math.random() < catchChance) {
-      const spot = fishingSpots[currentSpot];
-      let xpGained = 0;
-      let fishCaught = 0;
-      if (Math.random() < spot.specialFishChance) {
-        setSpecialFish(prevSpecialFish => prevSpecialFish + 1);
-        fishCaught = 1;
-        xpGained = 50;
-        toast.success("You caught a special fish! 🦈");
-      } else if (Math.random() < spot.rareFishChance) {
-        setRareFish(prevRareFish => prevRareFish + 1);
-        fishCaught = 1;
-        xpGained = 20;
-        toast.success("You caught a rare fish! 🐠");
-      } else {
-        fishCaught = fishPerClick;
-        setFish(prevFish => prevFish + fishCaught);
-        xpGained = 5 * fishCaught;
+    const spot = fishingSpots[currentSpot];
+    let xpGained = 0;
+    let fishCaught = 0;
+    let rareFishCaught = 0;
+    let specialFishCaught = 0;
+
+    // Perform fishing attempts based on fishPerClick
+    for (let i = 0; i < fishPerClick; i++) {
+      if (Math.random() < catchChance) {
+        if (Math.random() < spot.specialFishChance) {
+          specialFishCaught++;
+          xpGained += 50;
+        } else if (Math.random() < spot.rareFishChance) {
+          rareFishCaught++;
+          xpGained += 20;
+        } else {
+          fishCaught++;
+          xpGained += 5;
+        }
       }
-      setTotalFishCaught(prevTotal => {
-        const newTotal = prevTotal + fishCaught;
-        updateLeaderboard(newTotal, totalMoneyEarned);
-        return newTotal;
-      });
-      setXp(prevXp => {
-        const newXp = prevXp + xpGained;
-        checkLevelUp(newXp);
-        return newXp;
-      });
-      checkAchievements();
     }
+
+    // Update fish counts
+    setFish(prevFish => prevFish + fishCaught);
+    setRareFish(prevRareFish => prevRareFish + rareFishCaught);
+    setSpecialFish(prevSpecialFish => prevSpecialFish + specialFishCaught);
+
+    const totalCaught = fishCaught + rareFishCaught + specialFishCaught;
+
+    // Update total fish caught and leaderboard
+    setTotalFishCaught(prevTotal => {
+      const newTotal = prevTotal + totalCaught;
+      updateLeaderboard(newTotal, totalMoneyEarned);
+      return newTotal;
+    });
+
+    // Update XP and check for level up
+    setXp(prevXp => {
+      const newXp = prevXp + xpGained;
+      checkLevelUp(newXp);
+      return newXp;
+    });
+
+    // Check achievements
+    checkAchievements();
+
+    // Show toast messages for catches
+    if (specialFishCaught > 0) toast.success(`You caught ${specialFishCaught} special fish! 🦈`);
+    if (rareFishCaught > 0) toast.success(`You caught ${rareFishCaught} rare fish! 🐠`);
+    if (fishCaught > 0) toast.success(`You caught ${fishCaught} fish! 🐟`);
   };
 
   const updateLeaderboard = (newFishCount, newMoneyEarned) => {
