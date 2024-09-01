@@ -21,7 +21,7 @@ const fishingSpots = {
   ocean: { name: "Ocean", unlockCost: 20000, rareFishChance: 0.15, specialFishChance: 0.1, valueMultiplier: 3 },
 };
 
-const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPerClick, currentSpot, onChangeSpot, unlockedSpots }) => {
+const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPerClick, currentSpot, onChangeSpot, unlockedSpots, onNet, onTrap, netCooldown, trapCooldown, gear }) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   const handleFishClick = () => {
@@ -48,15 +48,24 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
             ))}
           </SelectContent>
         </Select>
-        <div className="relative mb-4">
-          <Button className="w-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-800 text-white" onClick={handleFishClick}>
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <Button className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-800 text-white" onClick={handleFishClick}>
             Go Fishing <span className={`inline-block ml-1 ${isAnimating ? 'rod-animation' : ''}`}>🎣</span>
           </Button>
-          {isAnimating && (
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full">
-              <span className="fish-animation inline-block">🐟</span>
-            </div>
-          )}
+          <Button 
+            className="bg-green-500 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-800 text-white" 
+            onClick={onNet} 
+            disabled={netCooldown > 0 || gear.net.level === 0}
+          >
+            Use Net 🕸️ {netCooldown > 0 ? `(${netCooldown}s)` : ''}
+          </Button>
+          <Button 
+            className="bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-700 dark:hover:bg-yellow-800 text-white" 
+            onClick={onTrap} 
+            disabled={trapCooldown > 0 || gear.trap.level === 0}
+          >
+            Set Trap 🪤 {trapCooldown > 0 ? `(${trapCooldown}s)` : ''}
+          </Button>
         </div>
         <div className="grid grid-cols-2 gap-2 text-sm">
           <p className="text-gray-700 dark:text-gray-300">Fish: {fish} 🐟</p>
@@ -70,16 +79,19 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
   );
 };
 
-const Inventory = ({ fish, rareFish, money, onSell }) => (
+const Inventory = ({ fish, rareFish, specialFish, netCatch, trapCatch, money, onSell }) => (
   <Card className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
     <CardHeader>
       <CardTitle className="text-green-800 dark:text-green-200">Inventory</CardTitle>
     </CardHeader>
     <CardContent>
-      <Button className="w-full mb-4 bg-green-500 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-800 text-white" onClick={onSell}>Sell Fish $</Button>
+      <Button className="w-full mb-4 bg-green-500 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-800 text-white" onClick={onSell}>Sell All Catches $</Button>
       <p className="text-gray-700 dark:text-gray-300">Money: ${money.toFixed(2)}</p>
       <p className="text-gray-700 dark:text-gray-300">Regular Fish: {fish} 🐟</p>
       <p className="text-gray-700 dark:text-gray-300">Rare Fish: {rareFish} 🐠</p>
+      <p className="text-gray-700 dark:text-gray-300">Special Fish: {specialFish} 🦈</p>
+      <p className="text-gray-700 dark:text-gray-300">Net Catch: Small {netCatch.small} 🐠 Medium {netCatch.medium} 🐡 Large {netCatch.large} 🐳</p>
+      <p className="text-gray-700 dark:text-gray-300">Trap Catch: Common {trapCatch.common} 🦀 Uncommon {trapCatch.uncommon} 🦑 Rare {trapCatch.rare} 🐙</p>
     </CardContent>
   </Card>
 );
@@ -156,9 +168,13 @@ const Index = () => {
   const [lastLoginDate, setLastLoginDate] = useState(null);
   const [gear, setGear] = useState({
     rod: { level: 1, cost: 10, description: "Increases catch chance" },
-    net: { level: 0, cost: 50, description: "Increases fish caught per attempt" },
-    trap: { level: 0, cost: 100, description: "Chance to catch multiple fish" },
+    net: { level: 0, cost: 50, description: "Catch multiple fish over time" },
+    trap: { level: 0, cost: 100, description: "Catch rare creatures over time" },
   });
+  const [netCooldown, setNetCooldown] = useState(0);
+  const [trapCooldown, setTrapCooldown] = useState(0);
+  const [netCatch, setNetCatch] = useState({ small: 0, medium: 0, large: 0 });
+  const [trapCatch, setTrapCatch] = useState({ common: 0, uncommon: 0, rare: 0 });
   const [boatLevel, setBoatLevel] = useState(0);
   const [fishermen, setFishermen] = useState(0);
   const [catchChance, setCatchChance] = useState(0.5); // Initial 50% catch chance
@@ -204,7 +220,7 @@ const Index = () => {
   }, [gear, specialItems.bait.active]);
 
   useEffect(() => {
-    // Only start automatic fishing when the player has fishermen
+    // Automatic fishing for fishermen
     if (fishermen > 0) {
       const interval = setInterval(() => {
         let fishCaught = 0;
@@ -234,6 +250,15 @@ const Index = () => {
       return () => clearInterval(interval);
     }
   }, [catchChance, specialItems.sonar.active, fishermen, fishPerClick, currentSpot]);
+
+  useEffect(() => {
+    // Cooldown timers for net and trap
+    const interval = setInterval(() => {
+      setNetCooldown(prev => Math.max(0, prev - 1));
+      setTrapCooldown(prev => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     setFishPerSecond(catchChance * (specialItems.sonar.active ? 3 : 1) * (1 + fishermen) * fishPerClick);
@@ -380,7 +405,20 @@ const Index = () => {
     const regularFishValue = fish * sellMultiplier * spot.valueMultiplier;
     const rareFishValue = rareFish * 10 * sellMultiplier * spot.valueMultiplier;
     const specialFishValue = specialFish * 50 * sellMultiplier * spot.valueMultiplier;
-    const totalMoneyEarned = regularFishValue + rareFishValue + specialFishValue;
+  
+    const netCatchValue = (
+      netCatch.small * 5 + 
+      netCatch.medium * 15 + 
+      netCatch.large * 30
+    ) * sellMultiplier * spot.valueMultiplier;
+  
+    const trapCatchValue = (
+      trapCatch.common * 20 + 
+      trapCatch.uncommon * 50 + 
+      trapCatch.rare * 100
+    ) * sellMultiplier * spot.valueMultiplier;
+  
+    const totalMoneyEarned = regularFishValue + rareFishValue + specialFishValue + netCatchValue + trapCatchValue;
 
     setMoney(prevMoney => prevMoney + totalMoneyEarned);
     setTotalMoneyEarned(prevTotal => {
@@ -399,7 +437,69 @@ const Index = () => {
     setFish(0);
     setRareFish(0);
     setSpecialFish(0);
+    setNetCatch({ small: 0, medium: 0, large: 0 });
+    setTrapCatch({ common: 0, uncommon: 0, rare: 0 });
     checkAchievements();
+  };
+
+  const handleNet = () => {
+    if (gear.net.level > 0 && netCooldown === 0) {
+      const netDuration = 30 - (gear.net.level * 2); // Cooldown reduces with net level
+      setNetCooldown(netDuration);
+    
+      toast.success("Net cast! Check back in " + netDuration + " seconds.");
+    
+      setTimeout(() => {
+        const catchAmount = Math.floor(Math.random() * (5 + gear.net.level)) + gear.net.level;
+        const newCatch = { small: 0, medium: 0, large: 0 };
+      
+        for (let i = 0; i < catchAmount; i++) {
+          const roll = Math.random();
+          if (roll < 0.6) newCatch.small++;
+          else if (roll < 0.9) newCatch.medium++;
+          else newCatch.large++;
+        }
+      
+        setNetCatch(prev => ({
+          small: prev.small + newCatch.small,
+          medium: prev.medium + newCatch.medium,
+          large: prev.large + newCatch.large
+        }));
+      
+        setNetCooldown(0);
+        toast.success(`Net pulled in! Caught ${catchAmount} fish!`);
+      }, netDuration * 1000);
+    }
+  };
+
+  const handleTrap = () => {
+    if (gear.trap.level > 0 && trapCooldown === 0) {
+      const trapDuration = 60 - (gear.trap.level * 3); // Cooldown reduces with trap level
+      setTrapCooldown(trapDuration);
+    
+      toast.success("Trap set! Check back in " + trapDuration + " seconds.");
+    
+      setTimeout(() => {
+        const catchAmount = Math.floor(Math.random() * (3 + gear.trap.level)) + 1;
+        const newCatch = { common: 0, uncommon: 0, rare: 0 };
+      
+        for (let i = 0; i < catchAmount; i++) {
+          const roll = Math.random();
+          if (roll < 0.7) newCatch.common++;
+          else if (roll < 0.95) newCatch.uncommon++;
+          else newCatch.rare++;
+        }
+      
+        setTrapCatch(prev => ({
+          common: prev.common + newCatch.common,
+          uncommon: prev.uncommon + newCatch.uncommon,
+          rare: prev.rare + newCatch.rare
+        }));
+      
+        setTrapCooldown(0);
+        toast.success(`Trap checked! Caught ${catchAmount} creatures!`);
+      }, trapDuration * 1000);
+    }
   };
 
   const handleBuyGear = (itemName) => {
@@ -534,16 +634,23 @@ const Index = () => {
               rareFish={rareFish}
               specialFish={specialFish}
               onFish={handleFish}
+              onNet={handleNet}
+              onTrap={handleTrap}
               catchChance={catchChance}
               fishPerClick={fishPerClick}
               currentSpot={currentSpot}
               onChangeSpot={handleChangeSpot}
               unlockedSpots={unlockedSpots}
+              netCooldown={netCooldown}
+              trapCooldown={trapCooldown}
+              gear={gear}
             />
             <Inventory
               fish={Math.floor(fish)}
               rareFish={rareFish}
               specialFish={specialFish}
+              netCatch={netCatch}
+              trapCatch={trapCatch}
               money={money}
               onSell={handleSell}
             />
