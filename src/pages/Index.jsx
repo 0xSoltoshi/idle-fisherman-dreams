@@ -14,33 +14,52 @@ const fishingSpots = {
   ocean: { name: "Ocean", unlockCost: 20000, rareFishChance: 0.15, specialFishChance: 0.1, valueMultiplier: 3 },
 };
 
-const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPerClick, currentSpot, onChangeSpot, unlockedSpots }) => (
-  <Card className="bg-blue-100">
-    <CardHeader>
-      <CardTitle>Fishing Area</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <Select onValueChange={onChangeSpot} value={currentSpot}>
-        <SelectTrigger className="w-full mb-4">
-          <SelectValue placeholder="Select fishing spot" />
-        </SelectTrigger>
-        <SelectContent>
-          {Object.entries(fishingSpots).map(([key, spot]) => (
-            <SelectItem key={key} value={key} disabled={!unlockedSpots.includes(key)}>
-              {spot.name} {!unlockedSpots.includes(key) && `(Unlock: $${spot.unlockCost})`}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Button className="w-full mb-4" onClick={onFish}>Go Fishing 🎣</Button>
-      <p>Fish: {fish} 🐟</p>
-      <p>Rare Fish: {rareFish} 🐠</p>
-      <p>Special Fish: {specialFish} 🦈</p>
-      <p>Catch Chance: {(catchChance * 100).toFixed(2)}%</p>
-      <p>Fish per Click: {fishPerClick}</p>
-    </CardContent>
-  </Card>
-);
+const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPerClick, currentSpot, onChangeSpot, unlockedSpots }) => {
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleFishClick = () => {
+    setIsAnimating(true);
+    onFish();
+    setTimeout(() => setIsAnimating(false), 500);
+  };
+
+  return (
+    <Card className="bg-blue-100">
+      <CardHeader>
+        <CardTitle>Fishing Area</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Select onValueChange={onChangeSpot} value={currentSpot}>
+          <SelectTrigger className="w-full mb-4">
+            <SelectValue placeholder="Select fishing spot" />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(fishingSpots).map(([key, spot]) => (
+              <SelectItem key={key} value={key} disabled={!unlockedSpots.includes(key)}>
+                {spot.name} {!unlockedSpots.includes(key) && `(Unlock: $${spot.unlockCost})`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="relative mb-4">
+          <Button className="w-full" onClick={handleFishClick}>
+            Go Fishing <span className={`inline-block ml-1 ${isAnimating ? 'rod-animation' : ''}`}>🎣</span>
+          </Button>
+          {isAnimating && (
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full">
+              <span className="fish-animation inline-block">🐟</span>
+            </div>
+          )}
+        </div>
+        <p>Fish: {fish} 🐟</p>
+        <p>Rare Fish: {rareFish} 🐠</p>
+        <p>Special Fish: {specialFish} 🦈</p>
+        <p>Catch Chance: {(catchChance * 100).toFixed(2)}%</p>
+        <p>Fish per Click: {fishPerClick}</p>
+      </CardContent>
+    </Card>
+  );
+};
 
 const Inventory = ({ fish, rareFish, money, onSell }) => (
   <Card className="bg-green-100">
