@@ -31,13 +31,13 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
   };
 
   return (
-    <Card className="bg-blue-100 dark:bg-blue-900 transition-colors duration-200">
+    <Card className="bg-blue-50 dark:bg-blue-950 transition-colors duration-200 border border-blue-200 dark:border-blue-800">
       <CardHeader>
         <CardTitle className="text-2xl text-blue-800 dark:text-blue-200">Fishing Area</CardTitle>
       </CardHeader>
       <CardContent>
         <Select onValueChange={onChangeSpot} value={currentSpot}>
-          <SelectTrigger className="w-full mb-4 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+          <SelectTrigger className="w-full mb-4 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600">
             <SelectValue placeholder="Select fishing spot" />
           </SelectTrigger>
           <SelectContent>
@@ -49,7 +49,7 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
           </SelectContent>
         </Select>
         <div className="relative mb-4">
-          <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white" onClick={handleFishClick}>
+          <Button className="w-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-800 text-white" onClick={handleFishClick}>
             Go Fishing <span className={`inline-block ml-1 ${isAnimating ? 'rod-animation' : ''}`}>🎣</span>
           </Button>
           {isAnimating && (
@@ -71,15 +71,15 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
 };
 
 const Inventory = ({ fish, rareFish, money, onSell }) => (
-  <Card className="bg-green-100">
+  <Card className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
     <CardHeader>
-      <CardTitle>Inventory</CardTitle>
+      <CardTitle className="text-green-800 dark:text-green-200">Inventory</CardTitle>
     </CardHeader>
     <CardContent>
-      <Button className="w-full mb-4" onClick={onSell}>Sell Fish $</Button>
-      <p>Money: ${money.toFixed(2)}</p>
-      <p>Regular Fish: {fish} 🐟</p>
-      <p>Rare Fish: {rareFish} 🐠</p>
+      <Button className="w-full mb-4 bg-green-500 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-800 text-white" onClick={onSell}>Sell Fish $</Button>
+      <p className="text-gray-700 dark:text-gray-300">Money: ${money.toFixed(2)}</p>
+      <p className="text-gray-700 dark:text-gray-300">Regular Fish: {fish} 🐟</p>
+      <p className="text-gray-700 dark:text-gray-300">Rare Fish: {rareFish} 🐠</p>
     </CardContent>
   </Card>
 );
@@ -89,19 +89,19 @@ const Metrics = ({ fishPerSecond, fishPerMinute, fishermen, level, xp }) => {
   const xpProgress = (xp / xpNeededForNextLevel) * 100;
 
   return (
-    <Card className="bg-indigo-100">
+    <Card className="bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800">
       <CardHeader>
-        <CardTitle>Metrics</CardTitle>
+        <CardTitle className="text-indigo-800 dark:text-indigo-200">Metrics</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
-        <p>Fish per Second: {fishPerSecond.toFixed(2)} 📈</p>
-        <p>Fish per Minute: {fishPerMinute.toFixed(2)} 📈</p>
-        <p>Fishermen: {fishermen} 👨‍🎣</p>
-        <p>Level: {level} 🏆</p>
-        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-          <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${xpProgress}%` }}></div>
+        <p className="text-gray-700 dark:text-gray-300">Fish per Second: {fishPerSecond.toFixed(2)} 📈</p>
+        <p className="text-gray-700 dark:text-gray-300">Fish per Minute: {fishPerMinute.toFixed(2)} 📈</p>
+        <p className="text-gray-700 dark:text-gray-300">Fishermen: {fishermen} 👨‍🎣</p>
+        <p className="text-gray-700 dark:text-gray-300">Level: {level} 🏆</p>
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+          <div className="bg-indigo-600 dark:bg-indigo-400 h-2.5 rounded-full" style={{ width: `${xpProgress}%` }}></div>
         </div>
-        <p>XP: {xp} / {xpNeededForNextLevel}</p>
+        <p className="text-gray-700 dark:text-gray-300">XP: {xp} / {xpNeededForNextLevel}</p>
       </CardContent>
     </Card>
   );
@@ -502,18 +502,19 @@ const Index = () => {
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 transition-colors duration-200">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-blue-600 dark:text-blue-400">Idle Fishing Adventure</h1>
+          <h1 className="text-4xl font-bold text-blue-600 dark:text-blue-300">Idle Fishing Adventure</h1>
           <Button
             variant="outline"
             size="icon"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
           >
             {theme === 'dark' ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
           </Button>
         </div>
-        <Card className="bg-white dark:bg-gray-800 shadow-xl">
+        <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="text-3xl text-center text-gray-800 dark:text-gray-200">Fishing Idle Game</CardTitle>
+            <CardTitle className="text-3xl text-center text-gray-800 dark:text-gray-100">Fishing Idle Game</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FishingArea
