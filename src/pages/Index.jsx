@@ -74,32 +74,30 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
           <p className="text-gray-700 dark:text-gray-300">Catch Chance: {(catchChance * 100).toFixed(2)}%</p>
           <p className="text-gray-700 dark:text-gray-300">Fish per Click: {fishPerClick}</p>
         </div>
-        {gear.net.level > 0 || gear.trap.level > 0 ? (
-          <div className="mt-4">
-            <h3 className="text-lg font-semibold mb-2">Assign Fishermen</h3>
-            <div className="grid grid-cols-3 gap-2">
-              {gear.net.level > 0 && (
-                <div>
-                  <p>Net: {fishermanAssignments.net}</p>
-                  <Button onClick={() => onAssignFisherman('net', 1)} disabled={fishermanAssignments.net >= 2}>+</Button>
-                  <Button onClick={() => onAssignFisherman('net', -1)} disabled={fishermanAssignments.net <= 0}>-</Button>
-                </div>
-              )}
-              {gear.trap.level > 0 && (
-                <div>
-                  <p>Trap: {fishermanAssignments.trap}</p>
-                  <Button onClick={() => onAssignFisherman('trap', 1)} disabled={fishermanAssignments.trap >= 2}>+</Button>
-                  <Button onClick={() => onAssignFisherman('trap', -1)} disabled={fishermanAssignments.trap <= 0}>-</Button>
-                </div>
-              )}
-              <div>
-                <p>Fishing: {fishermanAssignments.fishing}</p>
-                <Button onClick={() => onAssignFisherman('fishing', 1)}>+</Button>
-                <Button onClick={() => onAssignFisherman('fishing', -1)} disabled={fishermanAssignments.fishing <= 0}>-</Button>
-              </div>
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold mb-2">Fishermen Assignments</h3>
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <p>Fishing: {fishermanAssignments.fishing}</p>
+              <Button onClick={() => onAssignFisherman('fishing', 1)}>+</Button>
+              <Button onClick={() => onAssignFisherman('fishing', -1)} disabled={fishermanAssignments.fishing <= 0}>-</Button>
             </div>
+            {gear.net.level > 0 && (
+              <div>
+                <p>Net: {fishermanAssignments.net}</p>
+                <Button onClick={() => onAssignFisherman('net', 1)} disabled={fishermanAssignments.net >= 2}>+</Button>
+                <Button onClick={() => onAssignFisherman('net', -1)} disabled={fishermanAssignments.net <= 0}>-</Button>
+              </div>
+            )}
+            {gear.trap.level > 0 && (
+              <div>
+                <p>Trap: {fishermanAssignments.trap}</p>
+                <Button onClick={() => onAssignFisherman('trap', 1)} disabled={fishermanAssignments.trap >= 2}>+</Button>
+                <Button onClick={() => onAssignFisherman('trap', -1)} disabled={fishermanAssignments.trap <= 0}>-</Button>
+              </div>
+            )}
           </div>
-        ) : null}
+        </div>
       </CardContent>
     </Card>
   );
@@ -251,13 +249,13 @@ const Index = () => {
   }, [gear, specialItems.bait.active]);
 
   useEffect(() => {
-    // Automatic fishing for fishermen
-    if (fishermen > 0) {
+    // Automatic fishing for fishermen assigned to fishing
+    if (fishermanAssignments.fishing > 0) {
       const interval = setInterval(() => {
         let fishCaught = 0;
         let rareFishCaught = 0;
         let specialFishCaught = 0;
-        const attempts = (specialItems.sonar.active ? 3 : 1) * fishermen;
+        const attempts = (specialItems.sonar.active ? 3 : 1) * fishermanAssignments.fishing;
         const spot = fishingSpots[currentSpot];
         for (let i = 0; i < attempts; i++) {
           if (Math.random() < catchChance) {
@@ -280,7 +278,7 @@ const Index = () => {
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [catchChance, specialItems.sonar.active, fishermen, fishPerClick, currentSpot]);
+  }, [catchChance, specialItems.sonar.active, fishermanAssignments.fishing, fishPerClick, currentSpot]);
 
   useEffect(() => {
     // Cooldown timers for net and trap
@@ -567,6 +565,7 @@ const Index = () => {
         ...prev,
         fishing: prev.fishing + 1
       }));
+      toast.success("New fisherman hired and assigned to fishing!");
       checkAchievements();
     }
   };
