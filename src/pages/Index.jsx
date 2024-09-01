@@ -21,7 +21,7 @@ const fishingSpots = {
   ocean: { name: "Ocean", unlockCost: 20000, rareFishChance: 0.15, specialFishChance: 0.1, valueMultiplier: 3 },
 };
 
-const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPerClick, currentSpot, onChangeSpot, unlockedSpots, onNet, onTrap, netCooldown, trapCooldown, gear }) => {
+const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPerClick, currentSpot, onChangeSpot, unlockedSpots, onNet, onTrap, netCooldown, trapCooldown, gear, fishermanAssignments, onAssignFisherman }) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   const handleFishClick = () => {
@@ -74,6 +74,32 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
           <p className="text-gray-700 dark:text-gray-300">Catch Chance: {(catchChance * 100).toFixed(2)}%</p>
           <p className="text-gray-700 dark:text-gray-300">Fish per Click: {fishPerClick}</p>
         </div>
+        {gear.net.level > 0 || gear.trap.level > 0 ? (
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold mb-2">Assign Fishermen</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {gear.net.level > 0 && (
+                <div>
+                  <p>Net: {fishermanAssignments.net}</p>
+                  <Button onClick={() => onAssignFisherman('net', 1)} disabled={fishermanAssignments.net >= 2}>+</Button>
+                  <Button onClick={() => onAssignFisherman('net', -1)} disabled={fishermanAssignments.net <= 0}>-</Button>
+                </div>
+              )}
+              {gear.trap.level > 0 && (
+                <div>
+                  <p>Trap: {fishermanAssignments.trap}</p>
+                  <Button onClick={() => onAssignFisherman('trap', 1)} disabled={fishermanAssignments.trap >= 2}>+</Button>
+                  <Button onClick={() => onAssignFisherman('trap', -1)} disabled={fishermanAssignments.trap <= 0}>-</Button>
+                </div>
+              )}
+              <div>
+                <p>Fishing: {fishermanAssignments.fishing}</p>
+                <Button onClick={() => onAssignFisherman('fishing', 1)}>+</Button>
+                <Button onClick={() => onAssignFisherman('fishing', -1)} disabled={fishermanAssignments.fishing <= 0}>-</Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -177,6 +203,11 @@ const Index = () => {
   const [trapCatch, setTrapCatch] = useState({ common: 0, uncommon: 0, rare: 0 });
   const [boatLevel, setBoatLevel] = useState(0);
   const [fishermen, setFishermen] = useState(0);
+  const [fishermanAssignments, setFishermanAssignments] = useState({
+    fishing: 0,
+    net: 0,
+    trap: 0
+  });
   const [catchChance, setCatchChance] = useState(0.5); // Initial 50% catch chance
   const [specialItems, setSpecialItems] = useState({
     bait: { cost: 50, active: false, duration: 60, effect: 'catchRate', multiplier: 1.5, description: 'Increases catch rate by 50% for 60 seconds' },
@@ -532,9 +563,47 @@ const Index = () => {
     if (money >= cost) {
       setMoney(prevMoney => prevMoney - cost);
       setFishermen(prevFishermen => prevFishermen + 1);
+      setFishermanAssignments(prev => ({
+        ...prev,
+        fishing: prev.fishing + 1
+      }));
       checkAchievements();
     }
   };
+
+  const handleAssignFisherman = (role, change) => {
+    setFishermanAssignments(prev => {
+      const newAssignments = { ...prev };
+      const totalAssigned = Object.values(prev).reduce((sum, count) => sum + count, 0);
+
+      if (change > 0 && totalAssigned < fishermen) {
+        if ((role === 'net' || role === 'trap') && prev[role] < 2) {
+          newAssignments[role] += 1;
+          newAssignments.fishing -= 1;
+        } else if (role === 'fishing') {
+          newAssignments.fishing += 1;
+        }
+      } else if (change < 0 && prev[role] > 0) {
+        newAssignments[role] -= 1;
+        newAssignments.fishing += 1;
+      }
+
+      return newAssignments;
+    });
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (fishermanAssignments.net >= 2 && gear.net.level > 0 && netCooldown === 0) {
+        handleNet();
+      }
+      if (fishermanAssignments.trap >= 2 && gear.trap.level > 0 && trapCooldown === 0) {
+        handleTrap();
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [fishermanAssignments, gear, netCooldown, trapCooldown]);
 
   const handleBuySpecialItem = (itemName) => {
     const item = specialItems[itemName];
@@ -646,6 +715,8 @@ const Index = () => {
               netCooldown={netCooldown}
               trapCooldown={trapCooldown}
               gear={gear}
+              fishermanAssignments={fishermanAssignments}
+              onAssignFisherman={handleAssignFisherman}
             />
             <Inventory
               fish={Math.floor(fish)}
