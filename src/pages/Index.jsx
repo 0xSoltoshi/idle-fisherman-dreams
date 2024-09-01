@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import Achievements from "@/components/Achievements";
-import Leaderboard from "@/components/Leaderboard";
 import { toast } from "sonner";
 import { format, isToday } from 'date-fns';
 import { useTheme } from 'next-themes';
@@ -790,24 +788,6 @@ const Index = () => {
                   </Badge>
                 )
               )}
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-xl text-gray-800 dark:text-gray-100">Achievements</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Achievements achievements={achievements} />
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-1 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-xl text-gray-800 dark:text-gray-100">Leaderboard</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Leaderboard data={leaderboardData} />
             </CardContent>
           </Card>
 
