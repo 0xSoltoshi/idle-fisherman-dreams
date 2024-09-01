@@ -85,14 +85,14 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
             {gear.net.level > 0 && (
               <div>
                 <p>Net: {fishermanAssignments.net}</p>
-                <Button onClick={() => onAssignFisherman('net', 1)} disabled={fishermanAssignments.net >= 2}>+</Button>
+                <Button onClick={() => onAssignFisherman('net', 1)} disabled={fishermanAssignments.net >= 1}>+</Button>
                 <Button onClick={() => onAssignFisherman('net', -1)} disabled={fishermanAssignments.net <= 0}>-</Button>
               </div>
             )}
             {gear.trap.level > 0 && (
               <div>
                 <p>Trap: {fishermanAssignments.trap}</p>
-                <Button onClick={() => onAssignFisherman('trap', 1)} disabled={fishermanAssignments.trap >= 2}>+</Button>
+                <Button onClick={() => onAssignFisherman('trap', 1)} disabled={fishermanAssignments.trap >= 1}>+</Button>
                 <Button onClick={() => onAssignFisherman('trap', -1)} disabled={fishermanAssignments.trap <= 0}>-</Button>
               </div>
             )}
