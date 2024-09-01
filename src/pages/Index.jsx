@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { format, isToday } from 'date-fns';
 import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
+import FishermenManagement from "@/components/FishermenManagement";
 
 const BASE_XP = 100;
 const XP_INCREMENT = 50;
@@ -183,6 +184,7 @@ const Index = () => {
     license: { cost: 100, active: false, duration: 120, effect: 'sellRate', multiplier: 2, description: 'Doubles selling price for 120 seconds' },
     sonar: { cost: 200, active: false, duration: 180, effect: 'fishRate', multiplier: 3, description: 'Triples fish caught per second for 180 seconds' },
   });
+  const [fishermenSkills, setFishermenSkills] = useState([]);
   const [achievements, setAchievements] = useState({
     catch100: { name: "Catch 100 Fish", achieved: false, reward: { type: 'money', amount: 50 } },
     catch1000: { name: "Catch 1,000 Fish", achieved: false, reward: { type: 'fishPerClick', amount: 1 } },
@@ -532,22 +534,41 @@ const Index = () => {
     if (money >= cost) {
       setMoney(prevMoney => prevMoney - cost);
       setFishermen(prevFishermen => prevFishermen + 1);
+      setFishermenSkills(prevSkills => [...prevSkills, { skill: 1, cost: 100 }]);
       toast.success("New fisherman hired and assigned to fishing!");
       checkAchievements();
+    }
+  };
+
+  const handleUpgradeFisherman = (index) => {
+    const fisherman = fishermenSkills[index];
+    if (money >= fisherman.cost) {
+      setMoney(prevMoney => prevMoney - fisherman.cost);
+      setFishermenSkills(prevSkills => {
+        const newSkills = [...prevSkills];
+        newSkills[index] = {
+          skill: fisherman.skill + 1,
+          cost: Math.floor(fisherman.cost * 1.5)
+        };
+        return newSkills;
+      });
+      toast.success(`Fisherman ${index + 1} upgraded to skill level ${fisherman.skill + 1}!`);
     }
   };
 
   useEffect(() => {
     const interval = setInterval(() => {
       if (fishermen > 0) {
-        for (let i = 0; i < fishermen; i++) {
-          handleFish();
-        }
+        fishermenSkills.forEach((fisherman, index) => {
+          for (let i = 0; i < fisherman.skill; i++) {
+            handleFish();
+          }
+        });
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [fishermen]);
+  }, [fishermen, fishermenSkills]);
 
   const handleBuySpecialItem = (itemName) => {
     const item = specialItems[itemName];
@@ -687,6 +708,12 @@ const Index = () => {
               onHireFisherman={handleHireFisherman}
               boatLevel={boatLevel}
               fishermen={fishermen}
+            />
+            <FishermenManagement
+              money={money}
+              fishermen={fishermen}
+              fishermenSkills={fishermenSkills}
+              onUpgradeFisherman={handleUpgradeFisherman}
             />
             <Metrics 
               fishPerSecond={fishPerSecond} 
