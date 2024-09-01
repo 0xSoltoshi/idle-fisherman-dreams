@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 
-const FishingArea = ({ fish, onFish, catchChance }) => (
+const FishingArea = ({ fish, onFish, catchChance, fishPerClick }) => (
   <Card className="bg-blue-100">
     <CardHeader>
       <CardTitle>Fishing Area</CardTitle>
@@ -13,6 +13,7 @@ const FishingArea = ({ fish, onFish, catchChance }) => (
       <Button className="w-full mb-4" onClick={onFish}>Go Fishing 🎣</Button>
       <p>Fish: {fish} 🐟</p>
       <p>Catch Chance: {(catchChance * 100).toFixed(2)}%</p>
+      <p>Fish per Click: {fishPerClick}</p>
     </CardContent>
   </Card>
 );
@@ -29,26 +30,27 @@ const Inventory = ({ fish, money, onSell }) => (
   </Card>
 );
 
-const Metrics = ({ fishPerSecond, fishPerMinute }) => (
+const Metrics = ({ fishPerSecond, fishPerMinute, fishermen }) => (
   <Card className="bg-indigo-100">
     <CardHeader>
       <CardTitle>Metrics</CardTitle>
     </CardHeader>
-    <CardContent className="flex justify-between">
+    <CardContent className="flex flex-col gap-2">
       <p>Fish per Second: {fishPerSecond.toFixed(2)} 📈</p>
       <p>Fish per Minute: {fishPerMinute.toFixed(2)} 📈</p>
+      <p>Fishermen: {fishermen} 👨‍🎣</p>
     </CardContent>
   </Card>
 );
 
-const Shop = ({ money, gear, onBuyGear }) => (
+const Shop = ({ money, gear, onBuyGear, onUpgradeBoat, onHireFisherman, boatLevel, fishermen }) => (
   <Dialog>
     <DialogTrigger asChild>
       <Button className="w-full">Open Shop 🛒</Button>
     </DialogTrigger>
-    <DialogContent>
+    <DialogContent className="max-w-md">
       <DialogHeader>
-        <DialogTitle>Fishing Gear Shop</DialogTitle>
+        <DialogTitle>Fishing Shop</DialogTitle>
       </DialogHeader>
       <div className="grid gap-4">
         {Object.entries(gear).map(([itemName, item]) => (
@@ -59,6 +61,18 @@ const Shop = ({ money, gear, onBuyGear }) => (
             </Button>
           </div>
         ))}
+        <div className="flex justify-between items-center">
+          <span>Boat (Level {boatLevel})</span>
+          <Button onClick={onUpgradeBoat} disabled={money < (boatLevel + 1) * 1000}>
+            Upgrade (${(boatLevel + 1) * 1000})
+          </Button>
+        </div>
+        <div className="flex justify-between items-center">
+          <span>Hire Fisherman ({fishermen})</span>
+          <Button onClick={onHireFisherman} disabled={money < (fishermen + 1) * 500}>
+            Hire (${(fishermen + 1) * 500})
+          </Button>
+        </div>
       </div>
     </DialogContent>
   </Dialog>
@@ -72,8 +86,9 @@ const Index = () => {
     rod: { level: 1, cost: 10, efficiency: 1 },
     net: { level: 0, cost: 50, efficiency: 0 },
     trap: { level: 0, cost: 100, efficiency: 0 },
-    boat: { level: 0, cost: 500, efficiency: 0 },
   });
+  const [boatLevel, setBoatLevel] = useState(0);
+  const [fishermen, setFishermen] = useState(0);
   const [specialItems, setSpecialItems] = useState({
     bait: { cost: 50, active: false, duration: 60, effect: 'catchRate', multiplier: 1.5, description: 'Increases catch rate by 50% for 60 seconds' },
     license: { cost: 100, active: false, duration: 120, effect: 'sellRate', multiplier: 2, description: 'Doubles selling price for 120 seconds' },
@@ -87,14 +102,15 @@ const Index = () => {
   };
 
   const catchChance = calculateCatchChance();
+  const fishPerClick = 1 + boatLevel;
 
   useEffect(() => {
     const interval = setInterval(() => {
       let fishCaught = 0;
-      const attempts = specialItems.sonar.active ? 3 : 1;
+      const attempts = (specialItems.sonar.active ? 3 : 1) * (1 + fishermen);
       for (let i = 0; i < attempts; i++) {
         if (Math.random() < catchChance) {
-          fishCaught++;
+          fishCaught += fishPerClick;
         }
       }
       if (fishCaught > 0) {
@@ -102,11 +118,11 @@ const Index = () => {
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [catchChance, specialItems.sonar.active]);
+  }, [catchChance, specialItems.sonar.active, fishermen, fishPerClick]);
 
   useEffect(() => {
-    setFishPerSecond(catchChance * (specialItems.sonar.active ? 3 : 1));
-  }, [catchChance, specialItems.sonar.active]);
+    setFishPerSecond(catchChance * (specialItems.sonar.active ? 3 : 1) * (1 + fishermen) * fishPerClick);
+  }, [catchChance, specialItems.sonar.active, fishermen, fishPerClick]);
 
   useEffect(() => {
     const timers = Object.entries(specialItems).map(([itemName, item]) => {
@@ -126,7 +142,7 @@ const Index = () => {
 
   const handleFish = () => {
     if (Math.random() < catchChance) {
-      setFish(prevFish => prevFish + 1);
+      setFish(prevFish => prevFish + fishPerClick);
     }
   };
 
@@ -151,6 +167,22 @@ const Index = () => {
     }
   };
 
+  const handleUpgradeBoat = () => {
+    const cost = (boatLevel + 1) * 1000;
+    if (money >= cost) {
+      setMoney(prevMoney => prevMoney - cost);
+      setBoatLevel(prevLevel => prevLevel + 1);
+    }
+  };
+
+  const handleHireFisherman = () => {
+    const cost = (fishermen + 1) * 500;
+    if (money >= cost) {
+      setMoney(prevMoney => prevMoney - cost);
+      setFishermen(prevFishermen => prevFishermen + 1);
+    }
+  };
+
   const handleBuySpecialItem = (itemName) => {
     const item = specialItems[itemName];
     if (money >= item.cost && !item.active) {
@@ -171,16 +203,18 @@ const Index = () => {
             <CardTitle className="text-2xl text-center">Fishing Idle Game</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
-            <FishingArea fish={Math.floor(fish)} onFish={handleFish} catchChance={catchChance} />
+            <FishingArea fish={Math.floor(fish)} onFish={handleFish} catchChance={catchChance} fishPerClick={fishPerClick} />
             <Inventory fish={Math.floor(fish)} money={money} onSell={handleSell} />
             <Shop 
               money={money} 
               gear={gear} 
               onBuyGear={handleBuyGear} 
-              specialItems={specialItems}
-              onBuySpecialItem={handleBuySpecialItem}
+              onUpgradeBoat={handleUpgradeBoat}
+              onHireFisherman={handleHireFisherman}
+              boatLevel={boatLevel}
+              fishermen={fishermen}
             />
-            <Metrics fishPerSecond={fishPerSecond} fishPerMinute={fishPerSecond * 60} />
+            <Metrics fishPerSecond={fishPerSecond} fishPerMinute={fishPerSecond * 60} fishermen={fishermen} />
             <Card className="col-span-2">
               <CardHeader>
                 <CardTitle>Active Bonuses</CardTitle>
