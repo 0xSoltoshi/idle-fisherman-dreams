@@ -342,9 +342,6 @@ const Index = () => {
     });
   };
 
-  const BASE_XP = 100;
-  const XP_INCREMENT = 50;
-
   const checkLevelUp = (currentXp) => {
     const xpNeededForNextLevel = BASE_XP + (level * XP_INCREMENT);
     if (currentXp >= xpNeededForNextLevel) {
