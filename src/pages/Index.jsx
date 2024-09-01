@@ -220,13 +220,13 @@ const Index = () => {
   }, [gear, specialItems.bait.active]);
 
   useEffect(() => {
-    // Automatic fishing for fishermen assigned to fishing
-    if (fishermanAssignments.fishing > 0) {
+    // Automatic fishing for all fishermen
+    if (fishermen > 0) {
       const interval = setInterval(() => {
         let fishCaught = 0;
         let rareFishCaught = 0;
         let specialFishCaught = 0;
-        const attempts = (specialItems.sonar.active ? 3 : 1) * fishermanAssignments.fishing;
+        const attempts = (specialItems.sonar.active ? 3 : 1) * fishermen;
         const spot = fishingSpots[currentSpot];
         for (let i = 0; i < attempts; i++) {
           if (Math.random() < catchChance) {
@@ -249,7 +249,7 @@ const Index = () => {
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [catchChance, specialItems.sonar.active, fishermanAssignments.fishing, fishPerClick, currentSpot]);
+  }, [catchChance, specialItems.sonar.active, fishermen, fishPerClick, currentSpot]);
 
   useEffect(() => {
     // Cooldown timers for net and trap
