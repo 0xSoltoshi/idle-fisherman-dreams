@@ -8,6 +8,8 @@ import Achievements from "@/components/Achievements";
 import Leaderboard from "@/components/Leaderboard";
 import { toast } from "sonner";
 import { format, isToday } from 'date-fns';
+import { useTheme } from 'next-themes';
+import { Moon, Sun } from 'lucide-react';
 
 const BASE_XP = 100;
 const XP_INCREMENT = 50;
@@ -29,13 +31,13 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
   };
 
   return (
-    <Card className="bg-blue-100">
+    <Card className="bg-blue-100 dark:bg-blue-900 transition-colors duration-200">
       <CardHeader>
-        <CardTitle>Fishing Area</CardTitle>
+        <CardTitle className="text-2xl text-blue-800 dark:text-blue-200">Fishing Area</CardTitle>
       </CardHeader>
       <CardContent>
         <Select onValueChange={onChangeSpot} value={currentSpot}>
-          <SelectTrigger className="w-full mb-4">
+          <SelectTrigger className="w-full mb-4 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
             <SelectValue placeholder="Select fishing spot" />
           </SelectTrigger>
           <SelectContent>
@@ -47,7 +49,7 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
           </SelectContent>
         </Select>
         <div className="relative mb-4">
-          <Button className="w-full" onClick={handleFishClick}>
+          <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white" onClick={handleFishClick}>
             Go Fishing <span className={`inline-block ml-1 ${isAnimating ? 'rod-animation' : ''}`}>🎣</span>
           </Button>
           {isAnimating && (
@@ -56,11 +58,13 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
             </div>
           )}
         </div>
-        <p>Fish: {fish} 🐟</p>
-        <p>Rare Fish: {rareFish} 🐠</p>
-        <p>Special Fish: {specialFish} 🦈</p>
-        <p>Catch Chance: {(catchChance * 100).toFixed(2)}%</p>
-        <p>Fish per Click: {fishPerClick}</p>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <p className="text-gray-700 dark:text-gray-300">Fish: {fish} 🐟</p>
+          <p className="text-gray-700 dark:text-gray-300">Rare Fish: {rareFish} 🐠</p>
+          <p className="text-gray-700 dark:text-gray-300">Special Fish: {specialFish} 🦈</p>
+          <p className="text-gray-700 dark:text-gray-300">Catch Chance: {(catchChance * 100).toFixed(2)}%</p>
+          <p className="text-gray-700 dark:text-gray-300">Fish per Click: {fishPerClick}</p>
+        </div>
       </CardContent>
     </Card>
   );
@@ -492,15 +496,26 @@ const Index = () => {
     }
   };
 
+  const { theme, setTheme } = useTheme();
+
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <h1 className="text-4xl font-bold text-center text-blue-600 mb-8">Idle Fishing Adventure</h1>
-      <div className="max-w-4xl mx-auto">
-        <Card>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 transition-colors duration-200">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold text-blue-600 dark:text-blue-400">Idle Fishing Adventure</h1>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          >
+            {theme === 'dark' ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
+          </Button>
+        </div>
+        <Card className="bg-white dark:bg-gray-800 shadow-xl">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">Fishing Idle Game</CardTitle>
+            <CardTitle className="text-3xl text-center text-gray-800 dark:text-gray-200">Fishing Idle Game</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FishingArea
               fish={Math.floor(fish)}
               rareFish={rareFish}
