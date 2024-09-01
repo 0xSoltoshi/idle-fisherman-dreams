@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Achievements from "@/components/Achievements";
+import Leaderboard from "@/components/Leaderboard";
 import { toast } from "sonner";
 
 const fishingSpots = {
@@ -167,6 +168,11 @@ const Index = () => {
   const [totalMoneyEarned, setTotalMoneyEarned] = useState(0);
   const [currentSpot, setCurrentSpot] = useState('pond');
   const [unlockedSpots, setUnlockedSpots] = useState(['pond']);
+  const [leaderboardData, setLeaderboardData] = useState([
+    { id: 1, name: 'Player 1', fishCount: 1000, moneyEarned: 5000 },
+    { id: 2, name: 'Player 2', fishCount: 800, moneyEarned: 4000 },
+    { id: 3, name: 'Player 3', fishCount: 600, moneyEarned: 3000 },
+  ]);
 
   const calculateCatchChance = () => {
     let baseChance = Object.values(gear).reduce((acc, item) => acc + item.level * item.efficiency, 0) * 0.05;
@@ -230,22 +236,27 @@ const Index = () => {
     if (Math.random() < catchChance) {
       const spot = fishingSpots[currentSpot];
       let xpGained = 0;
+      let fishCaught = 0;
       if (Math.random() < spot.specialFishChance) {
         setSpecialFish(prevSpecialFish => prevSpecialFish + 1);
-        setTotalFishCaught(prevTotal => prevTotal + 1);
+        fishCaught = 1;
         xpGained = 50;
         toast.success("You caught a special fish! 🦈");
       } else if (Math.random() < spot.rareFishChance) {
         setRareFish(prevRareFish => prevRareFish + 1);
-        setTotalFishCaught(prevTotal => prevTotal + 1);
+        fishCaught = 1;
         xpGained = 20;
         toast.success("You caught a rare fish! 🐠");
       } else {
-        const fishCaught = fishPerClick;
+        fishCaught = fishPerClick;
         setFish(prevFish => prevFish + fishCaught);
-        setTotalFishCaught(prevTotal => prevTotal + fishCaught);
         xpGained = 5 * fishCaught;
       }
+      setTotalFishCaught(prevTotal => {
+        const newTotal = prevTotal + fishCaught;
+        updateLeaderboard(newTotal, totalMoneyEarned);
+        return newTotal;
+      });
       setXp(prevXp => {
         const newXp = prevXp + xpGained;
         checkLevelUp(newXp);
@@ -253,6 +264,22 @@ const Index = () => {
       });
       checkAchievements();
     }
+  };
+
+  const updateLeaderboard = (newFishCount, newMoneyEarned) => {
+    setLeaderboardData(prevData => {
+      const playerIndex = prevData.findIndex(player => player.id === 1); // Assuming the current player is always id 1
+      if (playerIndex !== -1) {
+        const updatedData = [...prevData];
+        updatedData[playerIndex] = {
+          ...updatedData[playerIndex],
+          fishCount: newFishCount,
+          moneyEarned: newMoneyEarned
+        };
+        return updatedData.sort((a, b) => b.fishCount - a.fishCount);
+      }
+      return prevData;
+    });
   };
 
   const checkLevelUp = (currentXp) => {
@@ -274,17 +301,21 @@ const Index = () => {
     const rareFishValue = rareFish * 10 * sellMultiplier * spot.valueMultiplier;
     const specialFishValue = specialFish * 50 * sellMultiplier * spot.valueMultiplier;
     const totalMoneyEarned = regularFishValue + rareFishValue + specialFishValue;
-  
+
     setMoney(prevMoney => prevMoney + totalMoneyEarned);
-    setTotalMoneyEarned(prevTotal => prevTotal + totalMoneyEarned);
-  
+    setTotalMoneyEarned(prevTotal => {
+      const newTotal = prevTotal + totalMoneyEarned;
+      updateLeaderboard(totalFishCaught, newTotal);
+      return newTotal;
+    });
+
     const xpGained = Math.floor(totalMoneyEarned / 10); // 1 XP for every $10 earned
     setXp(prevXp => {
       const newXp = prevXp + xpGained;
       checkLevelUp(newXp);
       return newXp;
     });
-  
+
     setFish(0);
     setRareFish(0);
     setSpecialFish(0);
@@ -455,6 +486,7 @@ const Index = () => {
               </CardContent>
             </Card>
             <Achievements achievements={achievements} />
+            <Leaderboard data={leaderboardData} />
           </CardContent>
         </Card>
       </div>
