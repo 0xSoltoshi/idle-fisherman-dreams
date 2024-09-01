@@ -318,22 +318,14 @@ const Index = () => {
     // Perform fishing attempts based on fishPerClick
     for (let i = 0; i < fishPerClick; i++) {
       if (Math.random() < catchChance) {
-        let catchMultiplier = 1 + (gear.net.level * 0.2); // Net increases fish caught
-        let trapChance = gear.trap.level * 0.1; // Trap gives chance for extra catch
-
-        if (Math.random() < spot.specialFishChance) {
-          specialFishCaught += Math.ceil(catchMultiplier);
-          xpGained += 50 * Math.ceil(catchMultiplier);
-        } else if (Math.random() < spot.rareFishChance) {
-          rareFishCaught += Math.ceil(catchMultiplier);
-          xpGained += 20 * Math.ceil(catchMultiplier);
+        const rarityRoll = Math.random();
+        if (rarityRoll < 0.01 * gear.rod.level) {
+          specialFishCaught++;
+          xpGained += 50;
+        } else if (rarityRoll < 0.05 * gear.rod.level) {
+          rareFishCaught++;
+          xpGained += 20;
         } else {
-          fishCaught += Math.ceil(catchMultiplier);
-          xpGained += 5 * Math.ceil(catchMultiplier);
-        }
-
-        // Chance for trap to catch extra fish
-        if (Math.random() < trapChance) {
           fishCaught++;
           xpGained += 5;
         }
@@ -405,19 +397,19 @@ const Index = () => {
     const regularFishValue = fish * sellMultiplier * spot.valueMultiplier;
     const rareFishValue = rareFish * 10 * sellMultiplier * spot.valueMultiplier;
     const specialFishValue = specialFish * 50 * sellMultiplier * spot.valueMultiplier;
-  
+
     const netCatchValue = (
-      netCatch.small * 5 + 
-      netCatch.medium * 15 + 
-      netCatch.large * 30
+      netCatch.small * 20 + 
+      netCatch.medium * 100 + 
+      netCatch.large * 500
     ) * sellMultiplier * spot.valueMultiplier;
-  
+
     const trapCatchValue = (
-      trapCatch.common * 20 + 
-      trapCatch.uncommon * 50 + 
-      trapCatch.rare * 100
+      trapCatch.common * 50 + 
+      trapCatch.uncommon * 250 + 
+      trapCatch.rare * 1000
     ) * sellMultiplier * spot.valueMultiplier;
-  
+
     const totalMoneyEarned = regularFishValue + rareFishValue + specialFishValue + netCatchValue + trapCatchValue;
 
     setMoney(prevMoney => prevMoney + totalMoneyEarned);
@@ -440,34 +432,40 @@ const Index = () => {
     setNetCatch({ small: 0, medium: 0, large: 0 });
     setTrapCatch({ common: 0, uncommon: 0, rare: 0 });
     checkAchievements();
+
+    toast.success(`Sold all catches for $${totalMoneyEarned.toFixed(2)}!`);
   };
 
   const handleNet = () => {
     if (gear.net.level > 0 && netCooldown === 0) {
       const netDuration = 30 - (gear.net.level * 2); // Cooldown reduces with net level
       setNetCooldown(netDuration);
-    
+  
       toast.success("Net cast! Check back in " + netDuration + " seconds.");
-    
+  
       setTimeout(() => {
         const catchAmount = Math.floor(Math.random() * (5 + gear.net.level)) + gear.net.level;
         const newCatch = { small: 0, medium: 0, large: 0 };
-      
+    
         for (let i = 0; i < catchAmount; i++) {
-          const roll = Math.random();
-          if (roll < 0.6) newCatch.small++;
-          else if (roll < 0.9) newCatch.medium++;
-          else newCatch.large++;
+          const rarityRoll = Math.random();
+          if (rarityRoll < 0.02 * gear.net.level) {
+            newCatch.large++;
+          } else if (rarityRoll < 0.1 * gear.net.level) {
+            newCatch.medium++;
+          } else {
+            newCatch.small++;
+          }
         }
-      
+    
         setNetCatch(prev => ({
           small: prev.small + newCatch.small,
           medium: prev.medium + newCatch.medium,
           large: prev.large + newCatch.large
         }));
-      
+    
         setNetCooldown(0);
-        toast.success(`Net pulled in! Caught ${catchAmount} fish!`);
+        toast.success(`Net pulled in! Caught ${catchAmount} creatures!`);
       }, netDuration * 1000);
     }
   };
@@ -476,28 +474,32 @@ const Index = () => {
     if (gear.trap.level > 0 && trapCooldown === 0) {
       const trapDuration = 60 - (gear.trap.level * 3); // Cooldown reduces with trap level
       setTrapCooldown(trapDuration);
-    
+  
       toast.success("Trap set! Check back in " + trapDuration + " seconds.");
-    
+  
       setTimeout(() => {
         const catchAmount = Math.floor(Math.random() * (3 + gear.trap.level)) + 1;
         const newCatch = { common: 0, uncommon: 0, rare: 0 };
-      
+    
         for (let i = 0; i < catchAmount; i++) {
-          const roll = Math.random();
-          if (roll < 0.7) newCatch.common++;
-          else if (roll < 0.95) newCatch.uncommon++;
-          else newCatch.rare++;
+          const rarityRoll = Math.random();
+          if (rarityRoll < 0.03 * gear.trap.level) {
+            newCatch.rare++;
+          } else if (rarityRoll < 0.15 * gear.trap.level) {
+            newCatch.uncommon++;
+          } else {
+            newCatch.common++;
+          }
         }
-      
+    
         setTrapCatch(prev => ({
           common: prev.common + newCatch.common,
           uncommon: prev.uncommon + newCatch.uncommon,
           rare: prev.rare + newCatch.rare
         }));
-      
+    
         setTrapCooldown(0);
-        toast.success(`Trap checked! Caught ${catchAmount} creatures!`);
+        toast.success(`Trap checked! Caught ${catchAmount} big creatures!`);
       }, trapDuration * 1000);
     }
   };
