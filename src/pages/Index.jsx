@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import Achievements from "@/components/Achievements";
+import { toast } from "sonner";
 
 const FishingArea = ({ fish, onFish, catchChance, fishPerClick }) => (
   <Card className="bg-blue-100">
@@ -94,6 +96,16 @@ const Index = () => {
     license: { cost: 100, active: false, duration: 120, effect: 'sellRate', multiplier: 2, description: 'Doubles selling price for 120 seconds' },
     sonar: { cost: 200, active: false, duration: 180, effect: 'fishRate', multiplier: 3, description: 'Triples fish caught per second for 180 seconds' },
   });
+  const [achievements, setAchievements] = useState({
+    catch100: { name: "Catch 100 Fish", achieved: false, reward: { type: 'money', amount: 50 } },
+    catch1000: { name: "Catch 1,000 Fish", achieved: false, reward: { type: 'fishPerClick', amount: 1 } },
+    earn1000: { name: "Earn $1,000", achieved: false, reward: { type: 'catchRate', amount: 0.1 } },
+    earn10000: { name: "Earn $10,000", achieved: false, reward: { type: 'money', amount: 500 } },
+    hire5Fishermen: { name: "Hire 5 Fishermen", achieved: false, reward: { type: 'fishPerSecond', amount: 2 } },
+  });
+
+  const [totalFishCaught, setTotalFishCaught] = useState(0);
+  const [totalMoneyEarned, setTotalMoneyEarned] = useState(0);
 
   const calculateCatchChance = () => {
     let baseChance = Object.values(gear).reduce((acc, item) => acc + item.level * item.efficiency, 0) * 0.05;
@@ -142,14 +154,20 @@ const Index = () => {
 
   const handleFish = () => {
     if (Math.random() < catchChance) {
-      setFish(prevFish => prevFish + fishPerClick);
+      const fishCaught = fishPerClick;
+      setFish(prevFish => prevFish + fishCaught);
+      setTotalFishCaught(prevTotal => prevTotal + fishCaught);
+      checkAchievements();
     }
   };
 
   const handleSell = () => {
     const sellMultiplier = specialItems.license.active ? specialItems.license.multiplier : 1;
-    setMoney(prevMoney => prevMoney + fish * sellMultiplier);
+    const moneyEarned = fish * sellMultiplier;
+    setMoney(prevMoney => prevMoney + moneyEarned);
+    setTotalMoneyEarned(prevTotal => prevTotal + moneyEarned);
     setFish(0);
+    checkAchievements();
   };
 
   const handleBuyGear = (itemName) => {
@@ -180,6 +198,7 @@ const Index = () => {
     if (money >= cost) {
       setMoney(prevMoney => prevMoney - cost);
       setFishermen(prevFishermen => prevFishermen + 1);
+      checkAchievements();
     }
   };
 
@@ -191,6 +210,46 @@ const Index = () => {
         ...prevItems,
         [itemName]: { ...item, active: true },
       }));
+    }
+  };
+
+  const checkAchievements = () => {
+    const newAchievements = { ...achievements };
+    let achievementUnlocked = false;
+
+    if (totalFishCaught >= 100 && !newAchievements.catch100.achieved) {
+      newAchievements.catch100.achieved = true;
+      setMoney(prevMoney => prevMoney + newAchievements.catch100.reward.amount);
+      achievementUnlocked = true;
+    }
+
+    if (totalFishCaught >= 1000 && !newAchievements.catch1000.achieved) {
+      newAchievements.catch1000.achieved = true;
+      setFishPerClick(prevFishPerClick => prevFishPerClick + newAchievements.catch1000.reward.amount);
+      achievementUnlocked = true;
+    }
+
+    if (totalMoneyEarned >= 1000 && !newAchievements.earn1000.achieved) {
+      newAchievements.earn1000.achieved = true;
+      setCatchChance(prevCatchChance => prevCatchChance + newAchievements.earn1000.reward.amount);
+      achievementUnlocked = true;
+    }
+
+    if (totalMoneyEarned >= 10000 && !newAchievements.earn10000.achieved) {
+      newAchievements.earn10000.achieved = true;
+      setMoney(prevMoney => prevMoney + newAchievements.earn10000.reward.amount);
+      achievementUnlocked = true;
+    }
+
+    if (fishermen >= 5 && !newAchievements.hire5Fishermen.achieved) {
+      newAchievements.hire5Fishermen.achieved = true;
+      setFishPerSecond(prevFishPerSecond => prevFishPerSecond + newAchievements.hire5Fishermen.reward.amount);
+      achievementUnlocked = true;
+    }
+
+    if (achievementUnlocked) {
+      setAchievements(newAchievements);
+      toast.success("Achievement Unlocked!");
     }
   };
 
@@ -229,6 +288,7 @@ const Index = () => {
                 )}
               </CardContent>
             </Card>
+            <Achievements achievements={achievements} />
           </CardContent>
         </Card>
       </div>
