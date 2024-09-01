@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Achievements from "@/components/Achievements";
 import Leaderboard from "@/components/Leaderboard";
 import { toast } from "sonner";
+import { format, isToday } from 'date-fns';
 
 const fishingSpots = {
   pond: { name: "Pond", unlockCost: 0, rareFishChance: 0.05, specialFishChance: 0, valueMultiplier: 1 },
@@ -142,6 +143,8 @@ const Index = () => {
   const [fishPerSecond, setFishPerSecond] = useState(0);
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
+  const [loginStreak, setLoginStreak] = useState(0);
+  const [lastLoginDate, setLastLoginDate] = useState(null);
   const [gear, setGear] = useState({
     rod: { level: 1, cost: 10, efficiency: 1 },
     net: { level: 0, cost: 50, efficiency: 0 },
@@ -231,6 +234,34 @@ const Index = () => {
 
     return () => timers.forEach(timer => timer && clearTimeout(timer));
   }, [specialItems]);
+
+  useEffect(() => {
+    checkDailyReward();
+  }, []);
+
+  const checkDailyReward = () => {
+    const today = new Date();
+    const lastLogin = lastLoginDate ? new Date(lastLoginDate) : null;
+
+    if (!lastLogin || !isToday(lastLogin)) {
+      if (lastLogin && (today - lastLogin) / (1000 * 60 * 60 * 24) <= 1) {
+        setLoginStreak(prevStreak => prevStreak + 1);
+      } else {
+        setLoginStreak(1);
+      }
+      setLastLoginDate(today.toISOString());
+      awardDailyReward();
+    }
+  };
+
+  const awardDailyReward = () => {
+    const baseReward = 50;
+    const rewardMultiplier = Math.min(loginStreak, 7);
+    const reward = baseReward * rewardMultiplier;
+
+    setMoney(prevMoney => prevMoney + reward);
+    toast.success(`Daily Reward: $${reward}! Login streak: ${loginStreak} day${loginStreak > 1 ? 's' : ''}`);
+  };
 
   const handleFish = () => {
     if (Math.random() < catchChance) {
@@ -455,6 +486,16 @@ const Index = () => {
               money={money}
               onSell={handleSell}
             />
+            <Card className="col-span-2">
+              <CardHeader>
+                <CardTitle>Daily Login Reward</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>Current Login Streak: {loginStreak} day{loginStreak !== 1 ? 's' : ''}</p>
+                <p>Next Reward: ${50 * Math.min(loginStreak + 1, 7)}</p>
+                <p>Last Login: {lastLoginDate ? format(new Date(lastLoginDate), 'PPP') : 'Never'}</p>
+              </CardContent>
+            </Card>
             <Shop 
               money={money} 
               gear={gear} 
