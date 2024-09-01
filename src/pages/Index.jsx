@@ -81,22 +81,26 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
   );
 };
 
-const Inventory = ({ fish, rareFish, specialFish, netCatch, trapCatch, money, onSell }) => (
-  <Card className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
-    <CardHeader>
-      <CardTitle className="text-green-800 dark:text-green-200">Inventory</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <Button className="w-full mb-4 bg-green-500 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-800 text-white" onClick={onSell}>Sell All Catches $</Button>
-      <p className="text-gray-700 dark:text-gray-300">Money: ${money.toFixed(2)}</p>
-      <p className="text-gray-700 dark:text-gray-300">Regular Fish: {fish} 🐟</p>
-      <p className="text-gray-700 dark:text-gray-300">Rare Fish: {rareFish} 🐠</p>
-      <p className="text-gray-700 dark:text-gray-300">Special Fish: {specialFish} 🦈</p>
-      <p className="text-gray-700 dark:text-gray-300">Net Catch: Small {netCatch.small} 🐠 Medium {netCatch.medium} 🐡 Large {netCatch.large} 🐳</p>
-      <p className="text-gray-700 dark:text-gray-300">Trap Catch: Common {trapCatch.common} 🦀 Uncommon {trapCatch.uncommon} 🦑 Rare {trapCatch.rare} 🐙</p>
-    </CardContent>
-  </Card>
-);
+const Inventory = ({ fish, rareFish, specialFish, netCatch, trapCatch, money, onSell, fishPrices }) => {
+  const calculateValue = (count, price) => (count * price).toFixed(2);
+
+  return (
+    <Card className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+      <CardHeader>
+        <CardTitle className="text-green-800 dark:text-green-200">Inventory</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Button className="w-full mb-4 bg-green-500 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-800 text-white" onClick={onSell}>Sell All Catches $</Button>
+        <p className="text-gray-700 dark:text-gray-300">Money: ${money.toFixed(2)}</p>
+        <p className="text-gray-700 dark:text-gray-300">Regular Fish: {fish} 🐟 (${calculateValue(fish, fishPrices['Regular Fish'])})</p>
+        <p className="text-gray-700 dark:text-gray-300">Rare Fish: {rareFish} 🐠 (${calculateValue(rareFish, fishPrices['Rare Fish'])})</p>
+        <p className="text-gray-700 dark:text-gray-300">Special Fish: {specialFish} 🦈 (${calculateValue(specialFish, fishPrices['Special Fish'])})</p>
+        <p className="text-gray-700 dark:text-gray-300">Net Catch: Small {netCatch.small} 🐠 (${calculateValue(netCatch.small, fishPrices['Small Net Fish'])}) Medium {netCatch.medium} 🐡 (${calculateValue(netCatch.medium, fishPrices['Medium Net Fish'])}) Large {netCatch.large} 🐳 (${calculateValue(netCatch.large, fishPrices['Large Net Fish'])})</p>
+        <p className="text-gray-700 dark:text-gray-300">Trap Catch: Common {trapCatch.common} 🦀 (${calculateValue(trapCatch.common, fishPrices['Common Trap Fish'])}) Uncommon {trapCatch.uncommon} 🦑 (${calculateValue(trapCatch.uncommon, fishPrices['Uncommon Trap Fish'])}) Rare {trapCatch.rare} 🐙 (${calculateValue(trapCatch.rare, fishPrices['Rare Trap Fish'])})</p>
+      </CardContent>
+    </Card>
+  );
+};
 
 const Metrics = ({ fishPerSecond, fishPerMinute, fishermen, level, xp }) => {
   const xpNeededForNextLevel = BASE_XP + (level * XP_INCREMENT);
@@ -701,6 +705,7 @@ const Index = () => {
               trapCatch={trapCatch}
               money={money}
               onSell={handleSell}
+              fishPrices={fishPrices}
             />
             <Card className="col-span-2">
               <CardHeader>
