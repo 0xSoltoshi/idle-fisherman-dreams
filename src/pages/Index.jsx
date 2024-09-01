@@ -75,18 +75,28 @@ const Inventory = ({ fish, rareFish, money, onSell }) => (
   </Card>
 );
 
-const Metrics = ({ fishPerSecond, fishPerMinute, fishermen }) => (
-  <Card className="bg-indigo-100">
-    <CardHeader>
-      <CardTitle>Metrics</CardTitle>
-    </CardHeader>
-    <CardContent className="flex flex-col gap-2">
-      <p>Fish per Second: {fishPerSecond.toFixed(2)} 📈</p>
-      <p>Fish per Minute: {fishPerMinute.toFixed(2)} 📈</p>
-      <p>Fishermen: {fishermen} 👨‍🎣</p>
-    </CardContent>
-  </Card>
-);
+const Metrics = ({ fishPerSecond, fishPerMinute, fishermen, level, xp }) => {
+  const xpNeededForNextLevel = level * 100;
+  const xpProgress = (xp / xpNeededForNextLevel) * 100;
+
+  return (
+    <Card className="bg-indigo-100">
+      <CardHeader>
+        <CardTitle>Metrics</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
+        <p>Fish per Second: {fishPerSecond.toFixed(2)} 📈</p>
+        <p>Fish per Minute: {fishPerMinute.toFixed(2)} 📈</p>
+        <p>Fishermen: {fishermen} 👨‍🎣</p>
+        <p>Level: {level} 🏆</p>
+        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+          <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${xpProgress}%` }}></div>
+        </div>
+        <p>XP: {xp} / {xpNeededForNextLevel}</p>
+      </CardContent>
+    </Card>
+  );
+};
 
 const Shop = ({ money, gear, onBuyGear, onUpgradeBoat, onHireFisherman, boatLevel, fishermen }) => (
   <Dialog>
@@ -129,6 +139,8 @@ const Index = () => {
   const [specialFish, setSpecialFish] = useState(0);
   const [money, setMoney] = useState(10);
   const [fishPerSecond, setFishPerSecond] = useState(0);
+  const [xp, setXp] = useState(0);
+  const [level, setLevel] = useState(1);
   const [gear, setGear] = useState({
     rod: { level: 1, cost: 10, efficiency: 1 },
     net: { level: 0, cost: 50, efficiency: 0 },
@@ -217,20 +229,41 @@ const Index = () => {
   const handleFish = () => {
     if (Math.random() < catchChance) {
       const spot = fishingSpots[currentSpot];
+      let xpGained = 0;
       if (Math.random() < spot.specialFishChance) {
         setSpecialFish(prevSpecialFish => prevSpecialFish + 1);
         setTotalFishCaught(prevTotal => prevTotal + 1);
+        xpGained = 50;
         toast.success("You caught a special fish! 🦈");
       } else if (Math.random() < spot.rareFishChance) {
         setRareFish(prevRareFish => prevRareFish + 1);
         setTotalFishCaught(prevTotal => prevTotal + 1);
+        xpGained = 20;
         toast.success("You caught a rare fish! 🐠");
       } else {
         const fishCaught = fishPerClick;
         setFish(prevFish => prevFish + fishCaught);
         setTotalFishCaught(prevTotal => prevTotal + fishCaught);
+        xpGained = 5 * fishCaught;
       }
+      setXp(prevXp => {
+        const newXp = prevXp + xpGained;
+        checkLevelUp(newXp);
+        return newXp;
+      });
       checkAchievements();
+    }
+  };
+
+  const checkLevelUp = (currentXp) => {
+    const xpNeededForNextLevel = level * 100;
+    if (currentXp >= xpNeededForNextLevel) {
+      setLevel(prevLevel => {
+        const newLevel = prevLevel + 1;
+        toast.success(`Level Up! You are now level ${newLevel}!`);
+        return newLevel;
+      });
+      setCatchChance(prevChance => Math.min(prevChance + 0.01, 1)); // Increase catch chance by 1% per level, max 100%
     }
   };
 
@@ -241,9 +274,17 @@ const Index = () => {
     const rareFishValue = rareFish * 10 * sellMultiplier * spot.valueMultiplier;
     const specialFishValue = specialFish * 50 * sellMultiplier * spot.valueMultiplier;
     const totalMoneyEarned = regularFishValue + rareFishValue + specialFishValue;
-    
+  
     setMoney(prevMoney => prevMoney + totalMoneyEarned);
     setTotalMoneyEarned(prevTotal => prevTotal + totalMoneyEarned);
+  
+    const xpGained = Math.floor(totalMoneyEarned / 10); // 1 XP for every $10 earned
+    setXp(prevXp => {
+      const newXp = prevXp + xpGained;
+      checkLevelUp(newXp);
+      return newXp;
+    });
+  
     setFish(0);
     setRareFish(0);
     setSpecialFish(0);
@@ -392,7 +433,13 @@ const Index = () => {
               boatLevel={boatLevel}
               fishermen={fishermen}
             />
-            <Metrics fishPerSecond={fishPerSecond} fishPerMinute={fishPerSecond * 60} fishermen={fishermen} />
+            <Metrics 
+              fishPerSecond={fishPerSecond} 
+              fishPerMinute={fishPerSecond * 60} 
+              fishermen={fishermen}
+              level={level}
+              xp={xp}
+            />
             <Card className="col-span-2">
               <CardHeader>
                 <CardTitle>Active Bonuses</CardTitle>
