@@ -3,18 +3,39 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Achievements from "@/components/Achievements";
 import { toast } from "sonner";
 
-const FishingArea = ({ fish, rareFish, onFish, catchChance, fishPerClick }) => (
+const fishingSpots = {
+  pond: { name: "Pond", unlockCost: 0, rareFishChance: 0.05, specialFishChance: 0, valueMultiplier: 1 },
+  lake: { name: "Lake", unlockCost: 1000, rareFishChance: 0.08, specialFishChance: 0.02, valueMultiplier: 1.5 },
+  river: { name: "River", unlockCost: 5000, rareFishChance: 0.1, specialFishChance: 0.05, valueMultiplier: 2 },
+  ocean: { name: "Ocean", unlockCost: 20000, rareFishChance: 0.15, specialFishChance: 0.1, valueMultiplier: 3 },
+};
+
+const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPerClick, currentSpot, onChangeSpot, unlockedSpots }) => (
   <Card className="bg-blue-100">
     <CardHeader>
       <CardTitle>Fishing Area</CardTitle>
     </CardHeader>
     <CardContent>
+      <Select onValueChange={onChangeSpot} value={currentSpot}>
+        <SelectTrigger className="w-full mb-4">
+          <SelectValue placeholder="Select fishing spot" />
+        </SelectTrigger>
+        <SelectContent>
+          {Object.entries(fishingSpots).map(([key, spot]) => (
+            <SelectItem key={key} value={key} disabled={!unlockedSpots.includes(key)}>
+              {spot.name} {!unlockedSpots.includes(key) && `(Unlock: $${spot.unlockCost})`}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       <Button className="w-full mb-4" onClick={onFish}>Go Fishing 🎣</Button>
       <p>Fish: {fish} 🐟</p>
       <p>Rare Fish: {rareFish} 🐠</p>
+      <p>Special Fish: {specialFish} 🦈</p>
       <p>Catch Chance: {(catchChance * 100).toFixed(2)}%</p>
       <p>Fish per Click: {fishPerClick}</p>
     </CardContent>
@@ -86,6 +107,7 @@ const Shop = ({ money, gear, onBuyGear, onUpgradeBoat, onHireFisherman, boatLeve
 const Index = () => {
   const [fish, setFish] = useState(0);
   const [rareFish, setRareFish] = useState(0);
+  const [specialFish, setSpecialFish] = useState(0);
   const [money, setMoney] = useState(10);
   const [fishPerSecond, setFishPerSecond] = useState(0);
   const [gear, setGear] = useState({
@@ -107,10 +129,13 @@ const Index = () => {
     earn10000: { name: "Earn $10,000", achieved: false, reward: { type: 'money', amount: 500 } },
     hire5Fishermen: { name: "Hire 5 Fishermen", achieved: false, reward: { type: 'fishPerSecond', amount: 2 } },
     catch10RareFish: { name: "Catch 10 Rare Fish", achieved: false, reward: { type: 'money', amount: 200 } },
+    unlockAllSpots: { name: "Unlock All Fishing Spots", achieved: false, reward: { type: 'catchRate', amount: 0.2 } },
   });
 
   const [totalFishCaught, setTotalFishCaught] = useState(0);
   const [totalMoneyEarned, setTotalMoneyEarned] = useState(0);
+  const [currentSpot, setCurrentSpot] = useState('pond');
+  const [unlockedSpots, setUnlockedSpots] = useState(['pond']);
 
   const calculateCatchChance = () => {
     let baseChance = Object.values(gear).reduce((acc, item) => acc + item.level * item.efficiency, 0) * 0.05;
@@ -125,25 +150,30 @@ const Index = () => {
     const interval = setInterval(() => {
       let fishCaught = 0;
       let rareFishCaught = 0;
+      let specialFishCaught = 0;
       const attempts = (specialItems.sonar.active ? 3 : 1) * (1 + fishermen);
+      const spot = fishingSpots[currentSpot];
       for (let i = 0; i < attempts; i++) {
         if (Math.random() < catchChance) {
-          if (Math.random() < 0.05) { // 5% chance for rare fish
+          if (Math.random() < spot.specialFishChance) {
+            specialFishCaught++;
+          } else if (Math.random() < spot.rareFishChance) {
             rareFishCaught++;
           } else {
             fishCaught += fishPerClick;
           }
         }
       }
-      if (fishCaught > 0 || rareFishCaught > 0) {
+      if (fishCaught > 0 || rareFishCaught > 0 || specialFishCaught > 0) {
         setFish(prevFish => prevFish + fishCaught);
         setRareFish(prevRareFish => prevRareFish + rareFishCaught);
-        setTotalFishCaught(prevTotal => prevTotal + fishCaught + rareFishCaught);
+        setSpecialFish(prevSpecialFish => prevSpecialFish + specialFishCaught);
+        setTotalFishCaught(prevTotal => prevTotal + fishCaught + rareFishCaught + specialFishCaught);
         checkAchievements();
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [catchChance, specialItems.sonar.active, fishermen, fishPerClick]);
+  }, [catchChance, specialItems.sonar.active, fishermen, fishPerClick, currentSpot]);
 
   useEffect(() => {
     setFishPerSecond(catchChance * (specialItems.sonar.active ? 3 : 1) * (1 + fishermen) * fishPerClick);
@@ -167,7 +197,12 @@ const Index = () => {
 
   const handleFish = () => {
     if (Math.random() < catchChance) {
-      if (Math.random() < 0.05) { // 5% chance for rare fish
+      const spot = fishingSpots[currentSpot];
+      if (Math.random() < spot.specialFishChance) {
+        setSpecialFish(prevSpecialFish => prevSpecialFish + 1);
+        setTotalFishCaught(prevTotal => prevTotal + 1);
+        toast.success("You caught a special fish! 🦈");
+      } else if (Math.random() < spot.rareFishChance) {
         setRareFish(prevRareFish => prevRareFish + 1);
         setTotalFishCaught(prevTotal => prevTotal + 1);
         toast.success("You caught a rare fish! 🐠");
@@ -182,14 +217,17 @@ const Index = () => {
 
   const handleSell = () => {
     const sellMultiplier = specialItems.license.active ? specialItems.license.multiplier : 1;
-    const regularFishValue = fish * sellMultiplier;
-    const rareFishValue = rareFish * 10 * sellMultiplier; // Rare fish are worth 10 times more
-    const totalMoneyEarned = regularFishValue + rareFishValue;
+    const spot = fishingSpots[currentSpot];
+    const regularFishValue = fish * sellMultiplier * spot.valueMultiplier;
+    const rareFishValue = rareFish * 10 * sellMultiplier * spot.valueMultiplier;
+    const specialFishValue = specialFish * 50 * sellMultiplier * spot.valueMultiplier;
+    const totalMoneyEarned = regularFishValue + rareFishValue + specialFishValue;
     
     setMoney(prevMoney => prevMoney + totalMoneyEarned);
     setTotalMoneyEarned(prevTotal => prevTotal + totalMoneyEarned);
     setFish(0);
     setRareFish(0);
+    setSpecialFish(0);
     checkAchievements();
   };
 
@@ -236,6 +274,23 @@ const Index = () => {
     }
   };
 
+  const handleChangeSpot = (spotKey) => {
+    if (unlockedSpots.includes(spotKey)) {
+      setCurrentSpot(spotKey);
+    } else {
+      const spot = fishingSpots[spotKey];
+      if (money >= spot.unlockCost) {
+        setMoney(prevMoney => prevMoney - spot.unlockCost);
+        setUnlockedSpots(prevUnlocked => [...prevUnlocked, spotKey]);
+        setCurrentSpot(spotKey);
+        toast.success(`Unlocked ${spot.name}!`);
+        checkAchievements();
+      } else {
+        toast.error(`Not enough money to unlock ${spot.name}`);
+      }
+    }
+  };
+
   const checkAchievements = () => {
     const newAchievements = { ...achievements };
     let achievementUnlocked = false;
@@ -270,6 +325,12 @@ const Index = () => {
       achievementUnlocked = true;
     }
 
+    if (unlockedSpots.length === Object.keys(fishingSpots).length && !newAchievements.unlockAllSpots.achieved) {
+      newAchievements.unlockAllSpots.achieved = true;
+      setCatchChance(prevCatchChance => prevCatchChance + newAchievements.unlockAllSpots.reward.amount);
+      achievementUnlocked = true;
+    }
+
     if (achievementUnlocked) {
       setAchievements(newAchievements);
       toast.success("Achievement Unlocked!");
@@ -285,8 +346,24 @@ const Index = () => {
             <CardTitle className="text-2xl text-center">Fishing Idle Game</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
-            <FishingArea fish={Math.floor(fish)} onFish={handleFish} catchChance={catchChance} fishPerClick={fishPerClick} />
-            <Inventory fish={Math.floor(fish)} money={money} onSell={handleSell} />
+            <FishingArea
+              fish={Math.floor(fish)}
+              rareFish={rareFish}
+              specialFish={specialFish}
+              onFish={handleFish}
+              catchChance={catchChance}
+              fishPerClick={fishPerClick}
+              currentSpot={currentSpot}
+              onChangeSpot={handleChangeSpot}
+              unlockedSpots={unlockedSpots}
+            />
+            <Inventory
+              fish={Math.floor(fish)}
+              rareFish={rareFish}
+              specialFish={specialFish}
+              money={money}
+              onSell={handleSell}
+            />
             <Shop 
               money={money} 
               gear={gear} 
