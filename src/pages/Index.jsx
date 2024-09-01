@@ -155,9 +155,9 @@ const Index = () => {
   const [loginStreak, setLoginStreak] = useState(0);
   const [lastLoginDate, setLastLoginDate] = useState(null);
   const [gear, setGear] = useState({
-    rod: { level: 1, cost: 10, efficiency: 1 },
-    net: { level: 0, cost: 50, efficiency: 0 },
-    trap: { level: 0, cost: 100, efficiency: 0 },
+    rod: { level: 1, cost: 10, description: "Increases catch chance" },
+    net: { level: 0, cost: 50, description: "Increases fish caught per attempt" },
+    trap: { level: 0, cost: 100, description: "Chance to catch multiple fish" },
   });
   const [boatLevel, setBoatLevel] = useState(0);
   const [fishermen, setFishermen] = useState(0);
@@ -188,9 +188,12 @@ const Index = () => {
   ]);
 
   const calculateCatchChance = () => {
-    let baseChance = Object.values(gear).reduce((acc, item) => acc + item.level * item.efficiency, 0) * 0.05;
+    let baseChance = 0.5; // Start with 50% base chance
+    Object.values(gear).forEach(item => {
+      baseChance += item.level * 0.05; // Each gear level adds 5% to catch chance
+    });
     if (specialItems.bait.active) baseChance *= specialItems.bait.multiplier;
-    return Math.min(baseChance + 0.5, 1); // Start with 50% base chance, cap at 100%
+    return Math.min(baseChance, 1); // Cap at 100%
   };
 
   const fishPerClick = 1 + boatLevel;
@@ -290,13 +293,22 @@ const Index = () => {
     // Perform fishing attempts based on fishPerClick
     for (let i = 0; i < fishPerClick; i++) {
       if (Math.random() < catchChance) {
+        let catchMultiplier = 1 + (gear.net.level * 0.2); // Net increases fish caught
+        let trapChance = gear.trap.level * 0.1; // Trap gives chance for extra catch
+
         if (Math.random() < spot.specialFishChance) {
-          specialFishCaught++;
-          xpGained += 50;
+          specialFishCaught += Math.ceil(catchMultiplier);
+          xpGained += 50 * Math.ceil(catchMultiplier);
         } else if (Math.random() < spot.rareFishChance) {
-          rareFishCaught++;
-          xpGained += 20;
+          rareFishCaught += Math.ceil(catchMultiplier);
+          xpGained += 20 * Math.ceil(catchMultiplier);
         } else {
+          fishCaught += Math.ceil(catchMultiplier);
+          xpGained += 5 * Math.ceil(catchMultiplier);
+        }
+
+        // Chance for trap to catch extra fish
+        if (Math.random() < trapChance) {
           fishCaught++;
           xpGained += 5;
         }
