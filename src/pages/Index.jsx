@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 const FishingArea = ({ fish, onFish, catchChance }) => (
   <Card className="bg-blue-100">
@@ -73,25 +74,55 @@ const Index = () => {
     trap: { level: 0, cost: 100, efficiency: 0 },
     boat: { level: 0, cost: 500, efficiency: 0 },
   });
+  const [specialItems, setSpecialItems] = useState({
+    bait: { cost: 50, active: false, duration: 60, effect: 'catchRate', multiplier: 1.5, description: 'Increases catch rate by 50% for 60 seconds' },
+    license: { cost: 100, active: false, duration: 120, effect: 'sellRate', multiplier: 2, description: 'Doubles selling price for 120 seconds' },
+    sonar: { cost: 200, active: false, duration: 180, effect: 'fishRate', multiplier: 3, description: 'Triples fish caught per second for 180 seconds' },
+  });
 
   const calculateCatchChance = () => {
-    return Object.values(gear).reduce((acc, item) => acc + item.level * item.efficiency, 0) * 0.05;
+    let baseChance = Object.values(gear).reduce((acc, item) => acc + item.level * item.efficiency, 0) * 0.05;
+    if (specialItems.bait.active) baseChance *= specialItems.bait.multiplier;
+    return Math.min(baseChance, 1); // Cap at 100%
   };
 
   const catchChance = calculateCatchChance();
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (Math.random() < catchChance) {
-        setFish(prevFish => prevFish + 1);
+      let fishCaught = 0;
+      const attempts = specialItems.sonar.active ? 3 : 1;
+      for (let i = 0; i < attempts; i++) {
+        if (Math.random() < catchChance) {
+          fishCaught++;
+        }
+      }
+      if (fishCaught > 0) {
+        setFish(prevFish => prevFish + fishCaught);
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [catchChance]);
+  }, [catchChance, specialItems.sonar.active]);
 
   useEffect(() => {
-    setFishPerSecond(catchChance);
-  }, [catchChance]);
+    setFishPerSecond(catchChance * (specialItems.sonar.active ? 3 : 1));
+  }, [catchChance, specialItems.sonar.active]);
+
+  useEffect(() => {
+    const timers = Object.entries(specialItems).map(([itemName, item]) => {
+      if (item.active) {
+        return setTimeout(() => {
+          setSpecialItems(prev => ({
+            ...prev,
+            [itemName]: { ...prev[itemName], active: false },
+          }));
+        }, item.duration * 1000);
+      }
+      return null;
+    });
+
+    return () => timers.forEach(timer => timer && clearTimeout(timer));
+  }, [specialItems]);
 
   const handleFish = () => {
     if (Math.random() < catchChance) {
@@ -100,7 +131,8 @@ const Index = () => {
   };
 
   const handleSell = () => {
-    setMoney(prevMoney => prevMoney + fish);
+    const sellMultiplier = specialItems.license.active ? specialItems.license.multiplier : 1;
+    setMoney(prevMoney => prevMoney + fish * sellMultiplier);
     setFish(0);
   };
 
@@ -119,6 +151,17 @@ const Index = () => {
     }
   };
 
+  const handleBuySpecialItem = (itemName) => {
+    const item = specialItems[itemName];
+    if (money >= item.cost && !item.active) {
+      setMoney(prevMoney => prevMoney - item.cost);
+      setSpecialItems(prevItems => ({
+        ...prevItems,
+        [itemName]: { ...item, active: true },
+      }));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <h1 className="text-4xl font-bold text-center text-blue-600 mb-8">Idle Fishing Adventure</h1>
@@ -130,8 +173,28 @@ const Index = () => {
           <CardContent className="grid grid-cols-2 gap-4">
             <FishingArea fish={Math.floor(fish)} onFish={handleFish} catchChance={catchChance} />
             <Inventory fish={Math.floor(fish)} money={money} onSell={handleSell} />
-            <Shop money={money} gear={gear} onBuyGear={handleBuyGear} />
+            <Shop 
+              money={money} 
+              gear={gear} 
+              onBuyGear={handleBuyGear} 
+              specialItems={specialItems}
+              onBuySpecialItem={handleBuySpecialItem}
+            />
             <Metrics fishPerSecond={fishPerSecond} fishPerMinute={fishPerSecond * 60} />
+            <Card className="col-span-2">
+              <CardHeader>
+                <CardTitle>Active Bonuses</CardTitle>
+              </CardHeader>
+              <CardContent className="flex gap-2">
+                {Object.entries(specialItems).map(([itemName, item]) => 
+                  item.active && (
+                    <Badge key={itemName} variant="secondary">
+                      {itemName} active
+                    </Badge>
+                  )
+                )}
+              </CardContent>
+            </Card>
           </CardContent>
         </Card>
       </div>
