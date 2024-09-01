@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { format, isToday } from 'date-fns';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Fish, DollarSign, Users, BarChart2 } from 'lucide-react';
+import { Moon, Sun, Fish, DollarSign, Users, BarChart2, Bug } from 'lucide-react';
 import FishermenManagement from "@/components/FishermenManagement";
 import FishPricesMenu from "@/components/FishPricesMenu";
 
@@ -452,6 +452,11 @@ const Index = () => {
     toast.success(`Sold all catches for $${totalMoneyEarned.toFixed(2)}!`);
   };
 
+  const handleDevMoney = () => {
+    setMoney(prevMoney => prevMoney + 10000);
+    toast.success("Added $10,000 for development!");
+  };
+
   const handleNet = () => {
     if (gear.net.level > 0 && netCooldown === 0) {
       const netDuration = 30 - (gear.net.level * 2); // Cooldown reduces with net level
@@ -793,6 +798,15 @@ const Index = () => {
 
           <div className="lg:col-span-3 flex justify-center mt-4">
             <FishPricesMenu fishPrices={fishPrices} />
+          </div>
+
+          <div className="lg:col-span-3 flex justify-center mt-4">
+            <Button
+              onClick={handleDevMoney}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              <Bug className="mr-2 h-4 w-4" /> Dev: Add $10,000
+            </Button>
           </div>
         </main>
       </div>
