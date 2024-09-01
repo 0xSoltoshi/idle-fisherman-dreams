@@ -78,7 +78,7 @@ const Inventory = ({ fish, rareFish, money, onSell }) => (
 );
 
 const Metrics = ({ fishPerSecond, fishPerMinute, fishermen, level, xp }) => {
-  const xpNeededForNextLevel = level * 100;
+  const xpNeededForNextLevel = BASE_XP + (level * XP_INCREMENT);
   const xpProgress = (xp / xpNeededForNextLevel) * 100;
 
   return (
@@ -143,6 +143,8 @@ const Index = () => {
   const [fishPerSecond, setFishPerSecond] = useState(0);
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
+  const BASE_XP = 100;
+  const XP_INCREMENT = 50;
   const [loginStreak, setLoginStreak] = useState(0);
   const [lastLoginDate, setLastLoginDate] = useState(null);
   const [gear, setGear] = useState({
@@ -340,14 +342,18 @@ const Index = () => {
     });
   };
 
+  const BASE_XP = 100;
+  const XP_INCREMENT = 50;
+
   const checkLevelUp = (currentXp) => {
-    const xpNeededForNextLevel = level * 100;
+    const xpNeededForNextLevel = BASE_XP + (level * XP_INCREMENT);
     if (currentXp >= xpNeededForNextLevel) {
       setLevel(prevLevel => {
         const newLevel = prevLevel + 1;
         toast.success(`Level Up! You are now level ${newLevel}!`);
         return newLevel;
       });
+      setXp(currentXp - xpNeededForNextLevel); // Reset XP for next level
       setCatchChance(prevChance => Math.min(prevChance + 0.01, 1)); // Increase catch chance by 1% per level, max 100%
     }
   };
