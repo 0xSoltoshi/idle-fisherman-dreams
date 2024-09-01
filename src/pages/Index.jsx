@@ -175,6 +175,7 @@ const Index = () => {
     'Rare Trap Fish': 1000,
   });
   const [fishPerSecond, setFishPerSecond] = useState(0);
+  const [fishPerClick, setFishPerClick] = useState(1);
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
   const BASE_XP = 100;
@@ -228,7 +229,9 @@ const Index = () => {
     return Math.min(baseChance, 1); // Cap at 100%
   };
 
-  const fishPerClick = 1 + boatLevel;
+  useEffect(() => {
+    setFishPerClick(1 + boatLevel);
+  }, [boatLevel]);
 
   useEffect(() => {
     const newCatchChance = calculateCatchChance();
