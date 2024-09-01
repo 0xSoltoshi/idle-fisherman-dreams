@@ -9,6 +9,9 @@ import Leaderboard from "@/components/Leaderboard";
 import { toast } from "sonner";
 import { format, isToday } from 'date-fns';
 
+const BASE_XP = 100;
+const XP_INCREMENT = 50;
+
 const fishingSpots = {
   pond: { name: "Pond", unlockCost: 0, rareFishChance: 0.05, specialFishChance: 0, valueMultiplier: 1 },
   lake: { name: "Lake", unlockCost: 1000, rareFishChance: 0.08, specialFishChance: 0.02, valueMultiplier: 1.5 },
