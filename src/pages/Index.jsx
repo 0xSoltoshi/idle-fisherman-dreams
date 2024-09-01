@@ -21,7 +21,7 @@ const fishingSpots = {
   ocean: { name: "Ocean", unlockCost: 20000, rareFishChance: 0.15, specialFishChance: 0.1, valueMultiplier: 3 },
 };
 
-const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPerClick, currentSpot, onChangeSpot, unlockedSpots, onNet, onTrap, netCooldown, trapCooldown, gear }) => {
+const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPerClick, currentSpot, onChangeSpot, unlockedSpots, onNet, onTrap, netCooldown, trapCooldown, gear, money }) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   const handleFishClick = () => {
@@ -42,7 +42,7 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
           </SelectTrigger>
           <SelectContent>
             {Object.entries(fishingSpots).map(([key, spot]) => (
-              <SelectItem key={key} value={key} disabled={!unlockedSpots.includes(key)}>
+              <SelectItem key={key} value={key}>
                 {spot.name} {!unlockedSpots.includes(key) && `(Unlock: $${spot.unlockCost})`}
               </SelectItem>
             ))}
@@ -73,6 +73,7 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
           <p className="text-gray-700 dark:text-gray-300">Special Fish: {specialFish} 🦈</p>
           <p className="text-gray-700 dark:text-gray-300">Catch Chance: {(catchChance * 100).toFixed(2)}%</p>
           <p className="text-gray-700 dark:text-gray-300">Fish per Click: {fishPerClick}</p>
+          <p className="text-gray-700 dark:text-gray-300">Current Money: ${money.toFixed(2)}</p>
         </div>
       </CardContent>
     </Card>
@@ -606,16 +607,17 @@ const Index = () => {
   const handleChangeSpot = (spotKey) => {
     if (unlockedSpots.includes(spotKey)) {
       setCurrentSpot(spotKey);
+      toast.success(`Moved to ${fishingSpots[spotKey].name}`);
     } else {
       const spot = fishingSpots[spotKey];
       if (money >= spot.unlockCost) {
         setMoney(prevMoney => prevMoney - spot.unlockCost);
         setUnlockedSpots(prevUnlocked => [...prevUnlocked, spotKey]);
         setCurrentSpot(spotKey);
-        toast.success(`Unlocked ${spot.name}!`);
+        toast.success(`Unlocked and moved to ${spot.name}!`);
         checkAchievements();
       } else {
-        toast.error(`Not enough money to unlock ${spot.name}`);
+        toast.error(`Not enough money to unlock ${spot.name}. You need $${spot.unlockCost}.`);
       }
     }
   };
@@ -704,6 +706,7 @@ const Index = () => {
                 netCooldown={netCooldown}
                 trapCooldown={trapCooldown}
                 gear={gear}
+                money={money}
               />
             </CardContent>
           </Card>
