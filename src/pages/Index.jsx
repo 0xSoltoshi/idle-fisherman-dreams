@@ -181,11 +181,15 @@ const Index = () => {
   const calculateCatchChance = () => {
     let baseChance = Object.values(gear).reduce((acc, item) => acc + item.level * item.efficiency, 0) * 0.05;
     if (specialItems.bait.active) baseChance *= specialItems.bait.multiplier;
-    return Math.min(baseChance, 1); // Cap at 100%
+    return Math.min(baseChance + 0.5, 1); // Start with 50% base chance, cap at 100%
   };
 
-  const catchChance = calculateCatchChance();
   const fishPerClick = 1 + boatLevel;
+
+  useEffect(() => {
+    const newCatchChance = calculateCatchChance();
+    setCatchChance(newCatchChance);
+  }, [gear, specialItems.bait.active]);
 
   useEffect(() => {
     // Only start automatic fishing when the player has fishermen
