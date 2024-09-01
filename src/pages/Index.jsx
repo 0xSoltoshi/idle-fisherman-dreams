@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Achievements from "@/components/Achievements";
 import Leaderboard from "@/components/Leaderboard";
+import { format } from 'date-fns';
 import { toast } from "sonner";
 import { format, isToday } from 'date-fns';
 import { useTheme } from 'next-themes';
@@ -706,17 +707,9 @@ const Index = () => {
               money={money}
               onSell={handleSell}
               fishPrices={fishPrices}
+              loginStreak={loginStreak}
+              lastLoginDate={lastLoginDate}
             />
-            <Card className="col-span-2">
-              <CardHeader>
-                <CardTitle>Daily Login Reward</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>Current Login Streak: {loginStreak} day{loginStreak !== 1 ? 's' : ''}</p>
-                <p>Next Reward: ${50 * Math.min(loginStreak + 1, 7)}</p>
-                <p>Last Login: {lastLoginDate ? format(new Date(lastLoginDate), 'PPP') : 'Never'}</p>
-              </CardContent>
-            </Card>
             <Shop 
               money={money} 
               gear={gear} 
