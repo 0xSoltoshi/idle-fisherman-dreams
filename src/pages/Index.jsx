@@ -9,7 +9,7 @@ import Leaderboard from "@/components/Leaderboard";
 import { toast } from "sonner";
 import { format, isToday } from 'date-fns';
 import { useTheme } from 'next-themes';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Fish, DollarSign, Users, BarChart2 } from 'lucide-react';
 import FishermenManagement from "@/components/FishermenManagement";
 import FishPricesMenu from "@/components/FishPricesMenu";
 
