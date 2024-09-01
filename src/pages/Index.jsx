@@ -663,10 +663,10 @@ const Index = () => {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 transition-colors duration-200">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-blue-600 dark:text-blue-300">Idle Fishing Adventure</h1>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-200">
+      <div className="max-w-7xl mx-auto">
+        <header className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-300">Idle Fishing Adventure</h1>
           <Button
             variant="outline"
             size="icon"
@@ -675,81 +675,146 @@ const Index = () => {
           >
             {theme === 'dark' ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
           </Button>
-        </div>
-        <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-3xl text-center text-gray-800 dark:text-gray-100">Fishing Idle Game</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FishingArea
-              fish={Math.floor(fish)}
-              rareFish={rareFish}
-              specialFish={specialFish}
-              onFish={handleFish}
-              onNet={handleNet}
-              onTrap={handleTrap}
-              catchChance={catchChance}
-              fishPerClick={fishPerClick}
-              currentSpot={currentSpot}
-              onChangeSpot={handleChangeSpot}
-              unlockedSpots={unlockedSpots}
-              netCooldown={netCooldown}
-              trapCooldown={trapCooldown}
-              gear={gear}
-            />
-            <Inventory
-              fish={Math.floor(fish)}
-              rareFish={rareFish}
-              specialFish={specialFish}
-              netCatch={netCatch}
-              trapCatch={trapCatch}
-              money={money}
-              onSell={handleSell}
-              fishPrices={fishPrices}
-              loginStreak={loginStreak}
-              lastLoginDate={lastLoginDate}
-            />
-            <Shop 
-              money={money} 
-              gear={gear} 
-              onBuyGear={handleBuyGear} 
-              onUpgradeBoat={handleUpgradeBoat}
-              onHireFisherman={handleHireFisherman}
-              boatLevel={boatLevel}
-              fishermen={fishermen}
-            />
-            <FishermenManagement
-              money={money}
-              fishermen={fishermen}
-              fishermenSkills={fishermenSkills}
-              onUpgradeFisherman={handleUpgradeFisherman}
-            />
-            <FishPricesMenu fishPrices={fishPrices} />
-            <Metrics 
-              fishPerSecond={fishPerSecond} 
-              fishPerMinute={fishPerSecond * 60} 
-              fishermen={fishermen}
-              level={level}
-              xp={xp}
-            />
-            <Card className="col-span-2">
+        </header>
+
+        <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-2xl md:text-3xl text-center text-gray-800 dark:text-gray-100">Fishing Area</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FishingArea
+                fish={Math.floor(fish)}
+                rareFish={rareFish}
+                specialFish={specialFish}
+                onFish={handleFish}
+                onNet={handleNet}
+                onTrap={handleTrap}
+                catchChance={catchChance}
+                fishPerClick={fishPerClick}
+                currentSpot={currentSpot}
+                onChangeSpot={handleChangeSpot}
+                unlockedSpots={unlockedSpots}
+                netCooldown={netCooldown}
+                trapCooldown={trapCooldown}
+                gear={gear}
+              />
+            </CardContent>
+          </Card>
+
+          <div className="space-y-6">
+            <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <CardTitle>Active Bonuses</CardTitle>
+                <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
+                  <Fish className="mr-2" /> Inventory
+                </CardTitle>
               </CardHeader>
-              <CardContent className="flex gap-2">
-                {Object.entries(specialItems).map(([itemName, item]) => 
-                  item.active && (
-                    <Badge key={itemName} variant="secondary">
-                      {itemName} active
-                    </Badge>
-                  )
-                )}
+              <CardContent>
+                <Inventory
+                  fish={Math.floor(fish)}
+                  rareFish={rareFish}
+                  specialFish={specialFish}
+                  netCatch={netCatch}
+                  trapCatch={trapCatch}
+                  money={money}
+                  onSell={handleSell}
+                  fishPrices={fishPrices}
+                  loginStreak={loginStreak}
+                  lastLoginDate={lastLoginDate}
+                />
               </CardContent>
             </Card>
-            <Achievements achievements={achievements} />
-            <Leaderboard data={leaderboardData} />
-          </CardContent>
-        </Card>
+
+            <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
+                  <DollarSign className="mr-2" /> Shop
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Shop 
+                  money={money} 
+                  gear={gear} 
+                  onBuyGear={handleBuyGear} 
+                  onUpgradeBoat={handleUpgradeBoat}
+                  onHireFisherman={handleHireFisherman}
+                  boatLevel={boatLevel}
+                  fishermen={fishermen}
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
+                <Users className="mr-2" /> Fishermen Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FishermenManagement
+                money={money}
+                fishermen={fishermen}
+                fishermenSkills={fishermenSkills}
+                onUpgradeFisherman={handleUpgradeFisherman}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
+                <BarChart2 className="mr-2" /> Metrics
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Metrics 
+                fishPerSecond={fishPerSecond} 
+                fishPerMinute={fishPerSecond * 60} 
+                fishermen={fishermen}
+                level={level}
+                xp={xp}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-3 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-xl text-gray-800 dark:text-gray-100">Active Bonuses</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              {Object.entries(specialItems).map(([itemName, item]) => 
+                item.active && (
+                  <Badge key={itemName} variant="secondary">
+                    {itemName} active
+                  </Badge>
+                )
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-xl text-gray-800 dark:text-gray-100">Achievements</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Achievements achievements={achievements} />
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-xl text-gray-800 dark:text-gray-100">Leaderboard</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Leaderboard data={leaderboardData} />
+            </CardContent>
+          </Card>
+
+          <div className="lg:col-span-3 flex justify-center">
+            <FishPricesMenu fishPrices={fishPrices} />
+          </div>
+        </main>
       </div>
     </div>
   );
