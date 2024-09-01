@@ -11,6 +11,7 @@ import { format, isToday } from 'date-fns';
 import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
 import FishermenManagement from "@/components/FishermenManagement";
+import FishPricesMenu from "@/components/FishPricesMenu";
 
 const BASE_XP = 100;
 const XP_INCREMENT = 50;
@@ -160,6 +161,17 @@ const Index = () => {
   const [rareFish, setRareFish] = useState(0);
   const [specialFish, setSpecialFish] = useState(0);
   const [money, setMoney] = useState(10);
+  const [fishPrices, setFishPrices] = useState({
+    'Regular Fish': 1,
+    'Rare Fish': 10,
+    'Special Fish': 50,
+    'Small Net Fish': 20,
+    'Medium Net Fish': 100,
+    'Large Net Fish': 500,
+    'Common Trap Fish': 50,
+    'Uncommon Trap Fish': 250,
+    'Rare Trap Fish': 1000,
+  });
   const [fishPerSecond, setFishPerSecond] = useState(0);
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
@@ -715,6 +727,7 @@ const Index = () => {
               fishermenSkills={fishermenSkills}
               onUpgradeFisherman={handleUpgradeFisherman}
             />
+            <FishPricesMenu fishPrices={fishPrices} />
             <Metrics 
               fishPerSecond={fishPerSecond} 
               fishPerMinute={fishPerSecond * 60} 
