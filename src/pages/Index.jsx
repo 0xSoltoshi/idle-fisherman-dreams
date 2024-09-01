@@ -802,7 +802,7 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+          <Card className="lg:col-span-1 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
             <CardHeader>
               <CardTitle className="text-xl text-gray-800 dark:text-gray-100">Leaderboard</CardTitle>
             </CardHeader>
@@ -811,7 +811,7 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <div className="lg:col-span-3 flex justify-center">
+          <div className="lg:col-span-3 flex justify-center mt-4">
             <FishPricesMenu fishPrices={fishPrices} />
           </div>
         </main>
