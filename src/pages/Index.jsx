@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import Achievements from "@/components/Achievements";
 import { toast } from "sonner";
 
-const FishingArea = ({ fish, onFish, catchChance, fishPerClick }) => (
+const FishingArea = ({ fish, rareFish, onFish, catchChance, fishPerClick }) => (
   <Card className="bg-blue-100">
     <CardHeader>
       <CardTitle>Fishing Area</CardTitle>
@@ -14,13 +14,14 @@ const FishingArea = ({ fish, onFish, catchChance, fishPerClick }) => (
     <CardContent>
       <Button className="w-full mb-4" onClick={onFish}>Go Fishing 🎣</Button>
       <p>Fish: {fish} 🐟</p>
+      <p>Rare Fish: {rareFish} 🐠</p>
       <p>Catch Chance: {(catchChance * 100).toFixed(2)}%</p>
       <p>Fish per Click: {fishPerClick}</p>
     </CardContent>
   </Card>
 );
 
-const Inventory = ({ fish, money, onSell }) => (
+const Inventory = ({ fish, rareFish, money, onSell }) => (
   <Card className="bg-green-100">
     <CardHeader>
       <CardTitle>Inventory</CardTitle>
@@ -28,6 +29,8 @@ const Inventory = ({ fish, money, onSell }) => (
     <CardContent>
       <Button className="w-full mb-4" onClick={onSell}>Sell Fish $</Button>
       <p>Money: ${money.toFixed(2)}</p>
+      <p>Regular Fish: {fish} 🐟</p>
+      <p>Rare Fish: {rareFish} 🐠</p>
     </CardContent>
   </Card>
 );
@@ -82,6 +85,7 @@ const Shop = ({ money, gear, onBuyGear, onUpgradeBoat, onHireFisherman, boatLeve
 
 const Index = () => {
   const [fish, setFish] = useState(0);
+  const [rareFish, setRareFish] = useState(0);
   const [money, setMoney] = useState(10);
   const [fishPerSecond, setFishPerSecond] = useState(0);
   const [gear, setGear] = useState({
@@ -102,6 +106,7 @@ const Index = () => {
     earn1000: { name: "Earn $1,000", achieved: false, reward: { type: 'catchRate', amount: 0.1 } },
     earn10000: { name: "Earn $10,000", achieved: false, reward: { type: 'money', amount: 500 } },
     hire5Fishermen: { name: "Hire 5 Fishermen", achieved: false, reward: { type: 'fishPerSecond', amount: 2 } },
+    catch10RareFish: { name: "Catch 10 Rare Fish", achieved: false, reward: { type: 'money', amount: 200 } },
   });
 
   const [totalFishCaught, setTotalFishCaught] = useState(0);
@@ -119,14 +124,22 @@ const Index = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       let fishCaught = 0;
+      let rareFishCaught = 0;
       const attempts = (specialItems.sonar.active ? 3 : 1) * (1 + fishermen);
       for (let i = 0; i < attempts; i++) {
         if (Math.random() < catchChance) {
-          fishCaught += fishPerClick;
+          if (Math.random() < 0.05) { // 5% chance for rare fish
+            rareFishCaught++;
+          } else {
+            fishCaught += fishPerClick;
+          }
         }
       }
-      if (fishCaught > 0) {
+      if (fishCaught > 0 || rareFishCaught > 0) {
         setFish(prevFish => prevFish + fishCaught);
+        setRareFish(prevRareFish => prevRareFish + rareFishCaught);
+        setTotalFishCaught(prevTotal => prevTotal + fishCaught + rareFishCaught);
+        checkAchievements();
       }
     }, 1000);
     return () => clearInterval(interval);
@@ -154,19 +167,29 @@ const Index = () => {
 
   const handleFish = () => {
     if (Math.random() < catchChance) {
-      const fishCaught = fishPerClick;
-      setFish(prevFish => prevFish + fishCaught);
-      setTotalFishCaught(prevTotal => prevTotal + fishCaught);
+      if (Math.random() < 0.05) { // 5% chance for rare fish
+        setRareFish(prevRareFish => prevRareFish + 1);
+        setTotalFishCaught(prevTotal => prevTotal + 1);
+        toast.success("You caught a rare fish! 🐠");
+      } else {
+        const fishCaught = fishPerClick;
+        setFish(prevFish => prevFish + fishCaught);
+        setTotalFishCaught(prevTotal => prevTotal + fishCaught);
+      }
       checkAchievements();
     }
   };
 
   const handleSell = () => {
     const sellMultiplier = specialItems.license.active ? specialItems.license.multiplier : 1;
-    const moneyEarned = fish * sellMultiplier;
-    setMoney(prevMoney => prevMoney + moneyEarned);
-    setTotalMoneyEarned(prevTotal => prevTotal + moneyEarned);
+    const regularFishValue = fish * sellMultiplier;
+    const rareFishValue = rareFish * 10 * sellMultiplier; // Rare fish are worth 10 times more
+    const totalMoneyEarned = regularFishValue + rareFishValue;
+    
+    setMoney(prevMoney => prevMoney + totalMoneyEarned);
+    setTotalMoneyEarned(prevTotal => prevTotal + totalMoneyEarned);
     setFish(0);
+    setRareFish(0);
     checkAchievements();
   };
 
