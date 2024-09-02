@@ -54,11 +54,13 @@ const fishingSpots = {
   },
 };
 
+// ... (keep all existing imports and component definitions)
+
 const Index = () => {
-  const { theme, setTheme } = useTheme();
+  // ... (keep all existing state variables)
   const [plots, setPlots] = useState([]);
-  const [money, setMoney] = useState(0);
-  // ... (other state variables)
+
+  // ... (keep all existing functions)
 
   const handleBuyPlot = (x, y, cost) => {
     if (money >= cost) {
@@ -78,9 +80,9 @@ const Index = () => {
     for (let i = 0; i < attempts; i++) {
       if (Math.random() < catchChance) {
         const rarityRoll = Math.random();
-        if (rarityRoll < 0.01 + (plots.length * 0.005)) {
+        if (rarityRoll < 0.01 + (plots.length * 0.005)) { // Increased chance for special fish based on owned plots
           specialFishCaught++;
-        } else if (rarityRoll < 0.1 + (plots.length * 0.01)) {
+        } else if (rarityRoll < 0.1 + (plots.length * 0.01)) { // Increased chance for rare fish based on owned plots
           rareFishCaught++;
         } else {
           fishCaught += fishPerClick;
@@ -92,7 +94,7 @@ const Index = () => {
     return { fishCaught, rareFishCaught, specialFishCaught, totalCaught };
   };
 
-  // ... (other functions)
+  // ... (keep all other existing functions)
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-200">
@@ -110,7 +112,7 @@ const Index = () => {
         </header>
 
         <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* ... (other Card components) */}
+          {/* ... (keep existing Card components) */}
 
           <Card className="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
             <CardHeader>
@@ -123,7 +125,7 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          {/* ... (other Card components) */}
+          {/* ... (keep other existing Card components) */}
         </main>
       </div>
     </div>
