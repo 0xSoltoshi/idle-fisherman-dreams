@@ -291,33 +291,43 @@ const Index = () => {
     // Automatic fishing for all fishermen
     if (fishermen > 0) {
       const interval = setInterval(() => {
-        let fishCaught = 0;
-        let rareFishCaught = 0;
-        let specialFishCaught = 0;
         const attempts = (specialItems.sonar.active ? 3 : 1) * fishermen;
         const spot = fishingSpots[currentSpot];
-        for (let i = 0; i < attempts; i++) {
-          if (Math.random() < catchChance) {
-            if (Math.random() < spot.specialFishChance) {
-              specialFishCaught++;
-            } else if (Math.random() < spot.rareFishChance) {
-              rareFishCaught++;
-            } else {
-              fishCaught += fishPerClick;
-            }
-          }
-        }
-        if (fishCaught > 0 || rareFishCaught > 0 || specialFishCaught > 0) {
-          setFish(prevFish => prevFish + fishCaught);
-          setRareFish(prevRareFish => prevRareFish + rareFishCaught);
-          setSpecialFish(prevSpecialFish => prevSpecialFish + specialFishCaught);
-          setTotalFishCaught(prevTotal => prevTotal + fishCaught + rareFishCaught + specialFishCaught);
+        const catchResults = calculateCatches(attempts, spot);
+
+        if (catchResults.totalCaught > 0) {
+          setFish(prevFish => prevFish + catchResults.fishCaught);
+          setRareFish(prevRareFish => prevRareFish + catchResults.rareFishCaught);
+          setSpecialFish(prevSpecialFish => prevSpecialFish + catchResults.specialFishCaught);
+          setTotalFishCaught(prevTotal => prevTotal + catchResults.totalCaught);
           checkAchievements();
         }
       }, 1000);
       return () => clearInterval(interval);
     }
   }, [catchChance, specialItems.sonar.active, fishermen, fishPerClick, currentSpot]);
+
+  const calculateCatches = (attempts, spot) => {
+    let fishCaught = 0;
+    let rareFishCaught = 0;
+    let specialFishCaught = 0;
+
+    for (let i = 0; i < attempts; i++) {
+      if (Math.random() < catchChance) {
+        const rarityRoll = Math.random();
+        if (rarityRoll < spot.specialFishChance) {
+          specialFishCaught++;
+        } else if (rarityRoll < spot.rareFishChance) {
+          rareFishCaught++;
+        } else {
+          fishCaught += fishPerClick;
+        }
+      }
+    }
+
+    const totalCaught = fishCaught + rareFishCaught + specialFishCaught;
+    return { fishCaught, rareFishCaught, specialFishCaught, totalCaught };
+  };
 
   useEffect(() => {
     // Cooldown timers for net and trap
@@ -378,34 +388,15 @@ const Index = () => {
 
   const handleFish = () => {
     const spot = fishingSpots[currentSpot];
-    let xpGained = 0;
-    let fishCaught = 0;
-    let rareFishCaught = 0;
-    let specialFishCaught = 0;
+    const catchResults = calculateCatches(fishPerClick, spot);
+    const { fishCaught, rareFishCaught, specialFishCaught, totalCaught } = catchResults;
 
-    // Perform fishing attempts based on fishPerClick
-    for (let i = 0; i < fishPerClick; i++) {
-      if (Math.random() < catchChance) {
-        const rarityRoll = Math.random();
-        if (rarityRoll < 0.01 * gear.rod.level) {
-          specialFishCaught++;
-          xpGained += 50;
-        } else if (rarityRoll < 0.05 * gear.rod.level) {
-          rareFishCaught++;
-          xpGained += 20;
-        } else {
-          fishCaught++;
-          xpGained += 5;
-        }
-      }
-    }
+    const xpGained = calculateXpGained(catchResults);
 
     // Update fish counts
     setFish(prevFish => prevFish + fishCaught);
     setRareFish(prevRareFish => prevRareFish + rareFishCaught);
     setSpecialFish(prevSpecialFish => prevSpecialFish + specialFishCaught);
-
-    const totalCaught = fishCaught + rareFishCaught + specialFishCaught;
 
     // Update total fish caught and leaderboard
     setTotalFishCaught(prevTotal => {
@@ -425,6 +416,17 @@ const Index = () => {
     checkAchievements();
 
     // Show toast messages for catches
+    showCatchToasts(catchResults, spot);
+
+    // Check for location-specific challenge completion
+    checkLocationChallenge(spot, fishCaught, rareFishCaught, specialFishCaught);
+  };
+
+  const calculateXpGained = ({ fishCaught, rareFishCaught, specialFishCaught }) => {
+    return fishCaught * 5 + rareFishCaught * 20 + specialFishCaught * 50;
+  };
+
+  const showCatchToasts = ({ fishCaught, rareFishCaught, specialFishCaught }, spot) => {
     if (specialFishCaught > 0) {
       const specialFishName = spot.specialFish[Math.floor(Math.random() * spot.specialFish.length)];
       toast.success(`You caught a ${specialFishName}! 🦈`);
@@ -437,9 +439,6 @@ const Index = () => {
       const fishName = spot.fish[Math.floor(Math.random() * spot.fish.length)];
       toast.success(`You caught ${fishCaught} ${fishName}! 🐟`);
     }
-
-    // Check for location-specific challenge completion
-    checkLocationChallenge(spot, fishCaught, rareFishCaught, specialFishCaught);
   };
 
   const checkLocationChallenge = (spot, fishCaught, rareFishCaught, specialFishCaught) => {
