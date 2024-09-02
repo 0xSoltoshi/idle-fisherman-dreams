@@ -54,11 +54,10 @@ const fishingSpots = {
   },
 };
 
-// ... (keep all existing imports and component definitions)
-
 const Index = () => {
-  // ... (keep all existing state variables)
+  const { theme, setTheme } = useTheme();
   const [plots, setPlots] = useState([]);
+  // ... (keep all other existing state variables)
 
   // ... (keep all existing functions)
 
@@ -80,9 +79,9 @@ const Index = () => {
     for (let i = 0; i < attempts; i++) {
       if (Math.random() < catchChance) {
         const rarityRoll = Math.random();
-        if (rarityRoll < 0.01 + (plots.length * 0.005)) { // Increased chance for special fish based on owned plots
+        if (rarityRoll < 0.01 + (plots.length * 0.005)) {
           specialFishCaught++;
-        } else if (rarityRoll < 0.1 + (plots.length * 0.01)) { // Increased chance for rare fish based on owned plots
+        } else if (rarityRoll < 0.1 + (plots.length * 0.01)) {
           rareFishCaught++;
         } else {
           fishCaught += fishPerClick;
