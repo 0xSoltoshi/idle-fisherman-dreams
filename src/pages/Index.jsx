@@ -6,8 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { format, isToday } from 'date-fns';
-import { useTheme } from 'next-themes';
-import { Moon, Sun, Fish, DollarSign, Users, BarChart2, Bug, Map } from 'lucide-react';
+import { Fish, DollarSign, Users, BarChart2, Bug, Map } from 'lucide-react';
 import FishermenManagement from "@/components/FishermenManagement";
 import FishPricesMenu from "@/components/FishPricesMenu";
 import FishingMap from "@/components/FishingMap";
@@ -55,11 +54,9 @@ const fishingSpots = {
 };
 
 const Index = () => {
-  const { theme, setTheme } = useTheme();
   const [plots, setPlots] = useState([]);
+  const [money, setMoney] = useState(0);
   // ... (keep all other existing state variables)
-
-  // ... (keep all existing functions)
 
   const handleBuyPlot = (x, y, cost) => {
     if (money >= cost) {
@@ -96,26 +93,18 @@ const Index = () => {
   // ... (keep all other existing functions)
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-200">
+    <div className="min-h-screen bg-gray-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         <header className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-300">Idle Fishing Adventure</h1>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
-          >
-            {theme === 'dark' ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
-          </Button>
+          <h1 className="text-3xl md:text-4xl font-bold text-blue-600">Idle Fishing Adventure</h1>
         </header>
 
         <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* ... (keep existing Card components) */}
 
-          <Card className="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+          <Card className="lg:col-span-2 bg-white shadow-xl border-gray-200">
             <CardHeader>
-              <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
+              <CardTitle className="flex items-center text-xl text-gray-800">
                 <Map className="mr-2" /> Fishing Map
               </CardTitle>
             </CardHeader>
