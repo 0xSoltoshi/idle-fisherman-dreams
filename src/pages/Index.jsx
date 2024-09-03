@@ -547,7 +547,9 @@ const Index = () => {
   };
 
   const handleTrap = () => {
-    if (gear.trap.level > 0 && trapCooldown === 0) {
+    if (gear.trap.level > 0 && trap
+
+Cooldown === 0) {
       const trapDuration = 60 - (gear.trap.level * 3);
       setTrapCooldown(trapDuration);
       toast.success("Trap set! Check back in " + trapDuration + " seconds.");
@@ -769,6 +771,23 @@ const Index = () => {
               />
             </CardContent>
           </Card>
+          <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
+                Auto Fisher
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AutoFisher
+                isActive={autoFisherActive}
+                progress={autoFisherProgress}
+                fishPerSecond={fishPerSecond * autoFisherLevel * 0.5}
+                onToggle={handleToggleAutoFisher}
+                upgradeCost={autoFisherUpgradeCost}
+                onUpgrade={handleUpgradeAutoFisher}
+              />
+            </CardContent>
+          </Card>
           <Card className="lg:col-span-3 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
             <CardHeader>
               <CardTitle className="text-xl text-gray-800 dark:text-gray-100">Active Bonuses</CardTitle>
@@ -781,21 +800,6 @@ const Index = () => {
                   </Badge>
                 )
               )}
-            </CardContent>
-          </Card>
-          <Card className="lg:col-span-3 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-xl text-gray-800 dark:text-gray-100">Auto Fisher</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AutoFisher
-                isActive={autoFisherActive}
-                progress={autoFisherProgress}
-                fishPerSecond={fishPerSecond * autoFisherLevel * 0.5}
-                onToggle={handleToggleAutoFisher}
-                upgradeCost={autoFisherUpgradeCost}
-                onUpgrade={handleUpgradeAutoFisher}
-              />
             </CardContent>
           </Card>
           <div className="lg:col-span-3 flex justify-center mt-4">
