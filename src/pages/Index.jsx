@@ -55,15 +55,12 @@ const fishingSpots = {
 
 const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPerClick, currentSpot, onChangeSpot, unlockedSpots, onNet, onTrap, netCooldown, trapCooldown, gear, money }) => {
   const [isAnimating, setIsAnimating] = useState(false);
-
   const handleFishClick = () => {
     setIsAnimating(true);
     onFish();
     setTimeout(() => setIsAnimating(false), 500);
   };
-
   const currentSpotData = fishingSpots[currentSpot];
-
   return (
     <Card className="bg-blue-50 dark:bg-blue-950 transition-colors duration-200 border border-blue-200 dark:border-blue-800">
       <CardHeader>
@@ -126,7 +123,6 @@ const FishingArea = ({ fish, rareFish, specialFish, onFish, catchChance, fishPer
 
 const Inventory = ({ fish, rareFish, specialFish, netCatch, trapCatch, money, onSell, fishPrices }) => {
   const calculateValue = (count, price) => (count * price).toFixed(2);
-
   return (
     <Card className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
       <CardHeader>
@@ -148,7 +144,6 @@ const Inventory = ({ fish, rareFish, specialFish, netCatch, trapCatch, money, on
 const Metrics = ({ fishPerSecond, fishPerMinute, fishermen, level, xp }) => {
   const xpNeededForNextLevel = BASE_XP + (level * XP_INCREMENT);
   const xpProgress = (xp / xpNeededForNextLevel) * 100;
-
   return (
     <Card className="bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800">
       <CardHeader>
@@ -227,8 +222,6 @@ const Index = () => {
   const [fishPerClick, setFishPerClick] = useState(1);
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
-  const BASE_XP = 100;
-  const XP_INCREMENT = 50;
   const [loginStreak, setLoginStreak] = useState(0);
   const [lastLoginDate, setLastLoginDate] = useState(null);
   const [gear, setGear] = useState({
@@ -242,7 +235,7 @@ const Index = () => {
   const [trapCatch, setTrapCatch] = useState({ common: 0, uncommon: 0, rare: 0 });
   const [boatLevel, setBoatLevel] = useState(0);
   const [fishermen, setFishermen] = useState(0);
-  const [catchChance, setCatchChance] = useState(0.5); // Initial 50% catch chance
+  const [catchChance, setCatchChance] = useState(0.5);
   const [specialItems, setSpecialItems] = useState({
     bait: { cost: 50, active: false, duration: 60, effect: 'catchRate', multiplier: 1.5, description: 'Increases catch rate by 50% for 60 seconds' },
     license: { cost: 100, active: false, duration: 120, effect: 'sellRate', multiplier: 2, description: 'Doubles selling price for 120 seconds' },
@@ -258,7 +251,6 @@ const Index = () => {
     catch10RareFish: { name: "Catch 10 Rare Fish", achieved: false, reward: { type: 'money', amount: 200 } },
     unlockAllSpots: { name: "Unlock All Fishing Spots", achieved: false, reward: { type: 'catchRate', amount: 0.2 } },
   });
-
   const [totalFishCaught, setTotalFishCaught] = useState(0);
   const [totalMoneyEarned, setTotalMoneyEarned] = useState(0);
   const [currentSpot, setCurrentSpot] = useState('pond');
@@ -270,12 +262,12 @@ const Index = () => {
   ]);
 
   const calculateCatchChance = () => {
-    let baseChance = 0.5; // Start with 50% base chance
+    let baseChance = 0.5;
     Object.values(gear).forEach(item => {
-      baseChance += item.level * 0.05; // Each gear level adds 5% to catch chance
+      baseChance += item.level * 0.05;
     });
     if (specialItems.bait.active) baseChance *= specialItems.bait.multiplier;
-    return Math.min(baseChance, 1); // Cap at 100%
+    return Math.min(baseChance, 1);
   };
 
   useEffect(() => {
@@ -288,7 +280,6 @@ const Index = () => {
   }, [gear, specialItems.bait.active]);
 
   useEffect(() => {
-    // Automatic fishing for all fishermen
     if (fishermen > 0) {
       const interval = setInterval(() => {
         let fishCaught = 0;
@@ -320,7 +311,6 @@ const Index = () => {
   }, [catchChance, specialItems.sonar.active, fishermen, fishPerClick, currentSpot]);
 
   useEffect(() => {
-    // Cooldown timers for net and trap
     const interval = setInterval(() => {
       setNetCooldown(prev => Math.max(0, prev - 1));
       setTrapCooldown(prev => Math.max(0, prev - 1));
@@ -344,7 +334,6 @@ const Index = () => {
       }
       return null;
     });
-
     return () => timers.forEach(timer => timer && clearTimeout(timer));
   }, [specialItems]);
 
@@ -355,7 +344,6 @@ const Index = () => {
   const checkDailyReward = () => {
     const today = new Date();
     const lastLogin = lastLoginDate ? new Date(lastLoginDate) : null;
-
     if (!lastLogin || !isToday(lastLogin)) {
       if (lastLogin && (today - lastLogin) / (1000 * 60 * 60 * 24) <= 1) {
         setLoginStreak(prevStreak => prevStreak + 1);
@@ -371,7 +359,6 @@ const Index = () => {
     const baseReward = 50;
     const rewardMultiplier = Math.min(loginStreak, 7);
     const reward = baseReward * rewardMultiplier;
-
     setMoney(prevMoney => prevMoney + reward);
     toast.success(`Daily Reward: $${reward}! Login streak: ${loginStreak} day${loginStreak > 1 ? 's' : ''}`);
   };
@@ -382,8 +369,6 @@ const Index = () => {
     let fishCaught = 0;
     let rareFishCaught = 0;
     let specialFishCaught = 0;
-
-    // Perform fishing attempts based on fishPerClick
     for (let i = 0; i < fishPerClick; i++) {
       if (Math.random() < catchChance) {
         const rarityRoll = Math.random();
@@ -399,32 +384,21 @@ const Index = () => {
         }
       }
     }
-
-    // Update fish counts
     setFish(prevFish => prevFish + fishCaught);
     setRareFish(prevRareFish => prevRareFish + rareFishCaught);
     setSpecialFish(prevSpecialFish => prevSpecialFish + specialFishCaught);
-
     const totalCaught = fishCaught + rareFishCaught + specialFishCaught;
-
-    // Update total fish caught and leaderboard
     setTotalFishCaught(prevTotal => {
       const newTotal = prevTotal + totalCaught;
       updateLeaderboard(newTotal, totalMoneyEarned);
       return newTotal;
     });
-
-    // Update XP and check for level up
     setXp(prevXp => {
       const newXp = prevXp + xpGained;
       checkLevelUp(newXp);
       return newXp;
     });
-
-    // Check achievements
     checkAchievements();
-
-    // Show toast messages for catches
     if (specialFishCaught > 0) {
       const specialFishName = spot.specialFish[Math.floor(Math.random() * spot.specialFish.length)];
       toast.success(`You caught a ${specialFishName}! 🦈`);
@@ -437,8 +411,6 @@ const Index = () => {
       const fishName = spot.fish[Math.floor(Math.random() * spot.fish.length)];
       toast.success(`You caught ${fishCaught} ${fishName}! 🐟`);
     }
-
-    // Check for location-specific challenge completion
     checkLocationChallenge(spot, fishCaught, rareFishCaught, specialFishCaught);
   };
 
@@ -449,7 +421,7 @@ const Index = () => {
           const newCount = prev + fishCaught;
           if (newCount >= 100 && prev < 100) {
             toast.success("Challenge completed: Catch 100 Pond fish!");
-            setMoney(prevMoney => prevMoney + 1000); // Reward for completing the challenge
+            setMoney(prevMoney => prevMoney + 1000);
           }
           return newCount;
         });
@@ -458,7 +430,7 @@ const Index = () => {
         if (specialFishCaught > 0 && !giantBassCaught) {
           setGiantBassCaught(true);
           toast.success("Challenge completed: Catch a Giant Bass!");
-          setMoney(prevMoney => prevMoney + 5000); // Reward for completing the challenge
+          setMoney(prevMoney => prevMoney + 5000);
         }
         break;
       case "River":
@@ -467,7 +439,7 @@ const Index = () => {
             const newCount = prev + 1;
             if (newCount >= 10 && prev < 10) {
               toast.success("Challenge completed: Catch 10 Golden Sturgeons!");
-              setMoney(prevMoney => prevMoney + 10000); // Reward for completing the challenge
+              setMoney(prevMoney => prevMoney + 10000);
             }
             return newCount;
           });
@@ -477,7 +449,7 @@ const Index = () => {
         if (specialFishCaught > 0 && !greatWhiteSharkCaught) {
           setGreatWhiteSharkCaught(true);
           toast.success("Challenge completed: Catch a Great White Shark!");
-          setMoney(prevMoney => prevMoney + 50000); // Reward for completing the challenge
+          setMoney(prevMoney => prevMoney + 50000);
         }
         break;
     }
@@ -485,7 +457,7 @@ const Index = () => {
 
   const updateLeaderboard = (newFishCount, newMoneyEarned) => {
     setLeaderboardData(prevData => {
-      const playerIndex = prevData.findIndex(player => player.id === 1); // Assuming the current player is always id 1
+      const playerIndex = prevData.findIndex(player => player.id === 1);
       if (playerIndex !== -1) {
         const updatedData = [...prevData];
         updatedData[playerIndex] = {
@@ -507,8 +479,8 @@ const Index = () => {
         toast.success(`Level Up! You are now level ${newLevel}!`);
         return newLevel;
       });
-      setXp(currentXp - xpNeededForNextLevel); // Reset XP for next level
-      setCatchChance(prevChance => Math.min(prevChance + 0.01, 1)); // Increase catch chance by 1% per level, max 100%
+      setXp(currentXp - xpNeededForNextLevel);
+      setCatchChance(prevChance => Math.min(prevChance + 0.01, 1));
     }
   };
 
@@ -518,42 +490,35 @@ const Index = () => {
     const regularFishValue = fish * sellMultiplier * spot.valueMultiplier;
     const rareFishValue = rareFish * 10 * sellMultiplier * spot.valueMultiplier;
     const specialFishValue = specialFish * 50 * sellMultiplier * spot.valueMultiplier;
-
     const netCatchValue = (
       netCatch.small * 20 + 
       netCatch.medium * 100 + 
       netCatch.large * 500
     ) * sellMultiplier * spot.valueMultiplier;
-
     const trapCatchValue = (
       trapCatch.common * 50 + 
       trapCatch.uncommon * 250 + 
       trapCatch.rare * 1000
     ) * sellMultiplier * spot.valueMultiplier;
-
     const totalMoneyEarned = regularFishValue + rareFishValue + specialFishValue + netCatchValue + trapCatchValue;
-
     setMoney(prevMoney => prevMoney + totalMoneyEarned);
     setTotalMoneyEarned(prevTotal => {
       const newTotal = prevTotal + totalMoneyEarned;
       updateLeaderboard(totalFishCaught, newTotal);
       return newTotal;
     });
-
-    const xpGained = Math.floor(totalMoneyEarned / 10); // 1 XP for every $10 earned
+    const xpGained = Math.floor(totalMoneyEarned / 10);
     setXp(prevXp => {
       const newXp = prevXp + xpGained;
       checkLevelUp(newXp);
       return newXp;
     });
-
     setFish(0);
     setRareFish(0);
     setSpecialFish(0);
     setNetCatch({ small: 0, medium: 0, large: 0 });
     setTrapCatch({ common: 0, uncommon: 0, rare: 0 });
     checkAchievements();
-
     toast.success(`Sold all catches for $${totalMoneyEarned.toFixed(2)}!`);
   };
 
@@ -564,15 +529,13 @@ const Index = () => {
 
   const handleNet = () => {
     if (gear.net.level > 0 && netCooldown === 0) {
-      const netDuration = 30 - (gear.net.level * 2); // Cooldown reduces with net level
-      setNetCooldown(netDuration);
-  
+      const netDuration = 30 - (gear.net.level * 2);
+      set
+NetCooldown(netDuration);
       toast.success("Net cast! Check back in " + netDuration + " seconds.");
-  
       setTimeout(() => {
         const catchAmount = Math.floor(Math.random() * (5 + gear.net.level)) + gear.net.level;
         const newCatch = { small: 0, medium: 0, large: 0 };
-    
         for (let i = 0; i < catchAmount; i++) {
           const rarityRoll = Math.random();
           if (rarityRoll < 0.02 * gear.net.level) {
@@ -583,13 +546,11 @@ const Index = () => {
             newCatch.small++;
           }
         }
-    
         setNetCatch(prev => ({
           small: prev.small + newCatch.small,
           medium: prev.medium + newCatch.medium,
           large: prev.large + newCatch.large
         }));
-    
         setNetCooldown(0);
         toast.success(`Net pulled in! Caught ${catchAmount} creatures!`);
       }, netDuration * 1000);
@@ -598,15 +559,12 @@ const Index = () => {
 
   const handleTrap = () => {
     if (gear.trap.level > 0 && trapCooldown === 0) {
-      const trapDuration = 60 - (gear.trap.level * 3); // Cooldown reduces with trap level
+      const trapDuration = 60 - (gear.trap.level * 3);
       setTrapCooldown(trapDuration);
-  
       toast.success("Trap set! Check back in " + trapDuration + " seconds.");
-  
       setTimeout(() => {
         const catchAmount = Math.floor(Math.random() * (3 + gear.trap.level)) + 1;
         const newCatch = { common: 0, uncommon: 0, rare: 0 };
-    
         for (let i = 0; i < catchAmount; i++) {
           const rarityRoll = Math.random();
           if (rarityRoll < 0.03 * gear.trap.level) {
@@ -617,13 +575,11 @@ const Index = () => {
             newCatch.common++;
           }
         }
-    
         setTrapCatch(prev => ({
           common: prev.common + newCatch.common,
           uncommon: prev.uncommon + newCatch.uncommon,
           rare: prev.rare + newCatch.rare
         }));
-    
         setTrapCooldown(0);
         toast.success(`Trap checked! Caught ${catchAmount} big creatures!`);
       }, trapDuration * 1000);
@@ -690,7 +646,6 @@ const Index = () => {
         });
       }
     }, 1000);
-
     return () => clearInterval(interval);
   }, [fishermen, fishermenSkills]);
 
@@ -726,43 +681,36 @@ const Index = () => {
   const checkAchievements = () => {
     const newAchievements = { ...achievements };
     let achievementUnlocked = false;
-
     if (totalFishCaught >= 100 && !newAchievements.catch100.achieved) {
       newAchievements.catch100.achieved = true;
       setMoney(prevMoney => prevMoney + newAchievements.catch100.reward.amount);
       achievementUnlocked = true;
     }
-
     if (totalFishCaught >= 1000 && !newAchievements.catch1000.achieved) {
       newAchievements.catch1000.achieved = true;
       setFishPerClick(prevFishPerClick => prevFishPerClick + newAchievements.catch1000.reward.amount);
       achievementUnlocked = true;
     }
-
     if (totalMoneyEarned >= 1000 && !newAchievements.earn1000.achieved) {
       newAchievements.earn1000.achieved = true;
       setCatchChance(prevCatchChance => prevCatchChance + newAchievements.earn1000.reward.amount);
       achievementUnlocked = true;
     }
-
     if (totalMoneyEarned >= 10000 && !newAchievements.earn10000.achieved) {
       newAchievements.earn10000.achieved = true;
       setMoney(prevMoney => prevMoney + newAchievements.earn10000.reward.amount);
       achievementUnlocked = true;
     }
-
     if (fishermen >= 5 && !newAchievements.hire5Fishermen.achieved) {
       newAchievements.hire5Fishermen.achieved = true;
       setFishPerSecond(prevFishPerSecond => prevFishPerSecond + newAchievements.hire5Fishermen.reward.amount);
       achievementUnlocked = true;
     }
-
     if (unlockedSpots.length === Object.keys(fishingSpots).length && !newAchievements.unlockAllSpots.achieved) {
       newAchievements.unlockAllSpots.achieved = true;
       setCatchChance(prevCatchChance => prevCatchChance + newAchievements.unlockAllSpots.reward.amount);
       achievementUnlocked = true;
     }
-
     if (achievementUnlocked) {
       setAchievements(newAchievements);
       toast.success("Achievement Unlocked!");
@@ -785,7 +733,6 @@ const Index = () => {
             {theme === 'dark' ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
           </Button>
         </header>
-
         <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
             <CardHeader>
@@ -811,7 +758,6 @@ const Index = () => {
               />
             </CardContent>
           </Card>
-
           <div className="space-y-6">
             <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
               <CardHeader>
@@ -834,7 +780,6 @@ const Index = () => {
                 />
               </CardContent>
             </Card>
-
             <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
@@ -854,7 +799,6 @@ const Index = () => {
               </CardContent>
             </Card>
           </div>
-
           <Card className="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
             <CardHeader>
               <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
@@ -870,7 +814,6 @@ const Index = () => {
               />
             </CardContent>
           </Card>
-
           <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
             <CardHeader>
               <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
@@ -887,7 +830,6 @@ const Index = () => {
               />
             </CardContent>
           </Card>
-
           <Card className="lg:col-span-3 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
             <CardHeader>
               <CardTitle className="text-xl text-gray-800 dark:text-gray-100">Active Bonuses</CardTitle>
@@ -902,11 +844,9 @@ const Index = () => {
               )}
             </CardContent>
           </Card>
-
           <div className="lg:col-span-3 flex justify-center mt-4">
             <FishPricesMenu fishPrices={fishPrices} />
           </div>
-
           <div className="lg:col-span-3 flex justify-center mt-4">
             <Button
               onClick={handleDevMoney}
