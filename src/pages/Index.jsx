@@ -12,6 +12,7 @@ import { useTheme } from 'next-themes';
 import { Moon, Sun, Fish, DollarSign, BarChart2, Bug, Zap } from 'lucide-react';
 import FishPricesMenu from "@/components/FishPricesMenu";
 import Fishtank from "@/components/Fishtank";
+import FishingArea from "@/components/FishingArea";
 import confetti from 'canvas-confetti';
 
 // ... (keep all existing imports and constants)
