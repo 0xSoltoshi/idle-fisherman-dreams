@@ -7,8 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { format, isToday } from 'date-fns';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Fish, DollarSign, Users, BarChart2, Bug } from 'lucide-react';
-import FishermenManagement from "@/components/FishermenManagement";
+import { Moon, Sun, Fish, DollarSign, BarChart2, Bug } from 'lucide-react';
 import FishPricesMenu from "@/components/FishPricesMenu";
 
 const BASE_XP = 100;
@@ -141,7 +140,7 @@ const Inventory = ({ fish, rareFish, specialFish, netCatch, trapCatch, money, on
   );
 };
 
-const Metrics = ({ fishPerSecond, fishPerMinute, fishermen, level, xp }) => {
+const Metrics = ({ fishPerSecond, fishPerMinute, level, xp }) => {
   const xpNeededForNextLevel = BASE_XP + (level * XP_INCREMENT);
   const xpProgress = (xp / xpNeededForNextLevel) * 100;
   return (
@@ -152,7 +151,6 @@ const Metrics = ({ fishPerSecond, fishPerMinute, fishermen, level, xp }) => {
       <CardContent className="flex flex-col gap-2">
         <p className="text-gray-700 dark:text-gray-300">Fish per Second: {fishPerSecond.toFixed(2)} 📈</p>
         <p className="text-gray-700 dark:text-gray-300">Fish per Minute: {fishPerMinute.toFixed(2)} 📈</p>
-        <p className="text-gray-700 dark:text-gray-300">Fishermen: {fishermen} 👨‍🎣</p>
         <p className="text-gray-700 dark:text-gray-300">Level: {level} 🏆</p>
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
           <div className="bg-indigo-600 dark:bg-indigo-400 h-2.5 rounded-full" style={{ width: `${xpProgress}%` }}></div>
@@ -163,7 +161,7 @@ const Metrics = ({ fishPerSecond, fishPerMinute, fishermen, level, xp }) => {
   );
 };
 
-const Shop = ({ money, gear, onBuyGear, onUpgradeBoat, onHireFisherman, boatLevel, fishermen }) => (
+const Shop = ({ money, gear, onBuyGear, onUpgradeBoat, boatLevel }) => (
   <Dialog>
     <DialogTrigger asChild>
       <Button className="w-full">Open Shop 🛒</Button>
@@ -185,12 +183,6 @@ const Shop = ({ money, gear, onBuyGear, onUpgradeBoat, onHireFisherman, boatLeve
           <span>Boat (Level {boatLevel})</span>
           <Button onClick={onUpgradeBoat} disabled={money < (boatLevel + 1) * 1000}>
             Upgrade (${(boatLevel + 1) * 1000})
-          </Button>
-        </div>
-        <div className="flex justify-between items-center">
-          <span>Hire Fisherman ({fishermen})</span>
-          <Button onClick={onHireFisherman} disabled={money < (fishermen + 1) * 500}>
-            Hire (${(fishermen + 1) * 500})
           </Button>
         </div>
       </div>
@@ -234,20 +226,17 @@ const Index = () => {
   const [netCatch, setNetCatch] = useState({ small: 0, medium: 0, large: 0 });
   const [trapCatch, setTrapCatch] = useState({ common: 0, uncommon: 0, rare: 0 });
   const [boatLevel, setBoatLevel] = useState(0);
-  const [fishermen, setFishermen] = useState(0);
   const [catchChance, setCatchChance] = useState(0.5);
   const [specialItems, setSpecialItems] = useState({
     bait: { cost: 50, active: false, duration: 60, effect: 'catchRate', multiplier: 1.5, description: 'Increases catch rate by 50% for 60 seconds' },
     license: { cost: 100, active: false, duration: 120, effect: 'sellRate', multiplier: 2, description: 'Doubles selling price for 120 seconds' },
     sonar: { cost: 200, active: false, duration: 180, effect: 'fishRate', multiplier: 3, description: 'Triples fish caught per second for 180 seconds' },
   });
-  const [fishermenSkills, setFishermenSkills] = useState([]);
   const [achievements, setAchievements] = useState({
     catch100: { name: "Catch 100 Fish", achieved: false, reward: { type: 'money', amount: 50 } },
     catch1000: { name: "Catch 1,000 Fish", achieved: false, reward: { type: 'fishPerClick', amount: 1 } },
     earn1000: { name: "Earn $1,000", achieved: false, reward: { type: 'catchRate', amount: 0.1 } },
     earn10000: { name: "Earn $10,000", achieved: false, reward: { type: 'money', amount: 500 } },
-    hire5Fishermen: { name: "Hire 5 Fishermen", achieved: false, reward: { type: 'fishPerSecond', amount: 2 } },
     catch10RareFish: { name: "Catch 10 Rare Fish", achieved: false, reward: { type: 'money', amount: 200 } },
     unlockAllSpots: { name: "Unlock All Fishing Spots", achieved: false, reward: { type: 'catchRate', amount: 0.2 } },
   });
@@ -280,37 +269,6 @@ const Index = () => {
   }, [gear, specialItems.bait.active]);
 
   useEffect(() => {
-    if (fishermen > 0) {
-      const interval = setInterval(() => {
-        let fishCaught = 0;
-        let rareFishCaught = 0;
-        let specialFishCaught = 0;
-        const attempts = (specialItems.sonar.active ? 3 : 1) * fishermen;
-        const spot = fishingSpots[currentSpot];
-        for (let i = 0; i < attempts; i++) {
-          if (Math.random() < catchChance) {
-            if (Math.random() < spot.specialFishChance) {
-              specialFishCaught++;
-            } else if (Math.random() < spot.rareFishChance) {
-              rareFishCaught++;
-            } else {
-              fishCaught += fishPerClick;
-            }
-          }
-        }
-        if (fishCaught > 0 || rareFishCaught > 0 || specialFishCaught > 0) {
-          setFish(prevFish => prevFish + fishCaught);
-          setRareFish(prevRareFish => prevRareFish + rareFishCaught);
-          setSpecialFish(prevSpecialFish => prevSpecialFish + specialFishCaught);
-          setTotalFishCaught(prevTotal => prevTotal + fishCaught + rareFishCaught + specialFishCaught);
-          checkAchievements();
-        }
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [catchChance, specialItems.sonar.active, fishermen, fishPerClick, currentSpot]);
-
-  useEffect(() => {
     const interval = setInterval(() => {
       setNetCooldown(prev => Math.max(0, prev - 1));
       setTrapCooldown(prev => Math.max(0, prev - 1));
@@ -319,8 +277,8 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    setFishPerSecond(catchChance * (specialItems.sonar.active ? 3 : 1) * (1 + fishermen) * fishPerClick);
-  }, [catchChance, specialItems.sonar.active, fishermen, fishPerClick]);
+    setFishPerSecond(catchChance * (specialItems.sonar.active ? 3 : 1) * fishPerClick);
+  }, [catchChance, specialItems.sonar.active, fishPerClick]);
 
   useEffect(() => {
     const timers = Object.entries(specialItems).map(([itemName, item]) => {
@@ -530,8 +488,7 @@ const Index = () => {
   const handleNet = () => {
     if (gear.net.level > 0 && netCooldown === 0) {
       const netDuration = 30 - (gear.net.level * 2);
-      set
-NetCooldown(netDuration);
+      setNetCooldown(netDuration);
       toast.success("Net cast! Check back in " + netDuration + " seconds.");
       setTimeout(() => {
         const catchAmount = Math.floor(Math.random() * (5 + gear.net.level)) + gear.net.level;
@@ -609,46 +566,6 @@ NetCooldown(netDuration);
     }
   };
 
-  const handleHireFisherman = () => {
-    const cost = (fishermen + 1) * 500;
-    if (money >= cost) {
-      setMoney(prevMoney => prevMoney - cost);
-      setFishermen(prevFishermen => prevFishermen + 1);
-      setFishermenSkills(prevSkills => [...prevSkills, { skill: 1, cost: 100 }]);
-      toast.success("New fisherman hired and assigned to fishing!");
-      checkAchievements();
-    }
-  };
-
-  const handleUpgradeFisherman = (index) => {
-    const fisherman = fishermenSkills[index];
-    if (money >= fisherman.cost) {
-      setMoney(prevMoney => prevMoney - fisherman.cost);
-      setFishermenSkills(prevSkills => {
-        const newSkills = [...prevSkills];
-        newSkills[index] = {
-          skill: fisherman.skill + 1,
-          cost: Math.floor(fisherman.cost * 1.5)
-        };
-        return newSkills;
-      });
-      toast.success(`Fisherman ${index + 1} upgraded to skill level ${fisherman.skill + 1}!`);
-    }
-  };
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (fishermen > 0) {
-        fishermenSkills.forEach((fisherman, index) => {
-          for (let i = 0; i < fisherman.skill; i++) {
-            handleFish();
-          }
-        });
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [fishermen, fishermenSkills]);
-
   const handleBuySpecialItem = (itemName) => {
     const item = specialItems[itemName];
     if (money >= item.cost && !item.active) {
@@ -699,11 +616,6 @@ NetCooldown(netDuration);
     if (totalMoneyEarned >= 10000 && !newAchievements.earn10000.achieved) {
       newAchievements.earn10000.achieved = true;
       setMoney(prevMoney => prevMoney + newAchievements.earn10000.reward.amount);
-      achievementUnlocked = true;
-    }
-    if (fishermen >= 5 && !newAchievements.hire5Fishermen.achieved) {
-      newAchievements.hire5Fishermen.achieved = true;
-      setFishPerSecond(prevFishPerSecond => prevFishPerSecond + newAchievements.hire5Fishermen.reward.amount);
       achievementUnlocked = true;
     }
     if (unlockedSpots.length === Object.keys(fishingSpots).length && !newAchievements.unlockAllSpots.achieved) {
@@ -775,8 +687,6 @@ NetCooldown(netDuration);
                   money={money}
                   onSell={handleSell}
                   fishPrices={fishPrices}
-                  loginStreak={loginStreak}
-                  lastLoginDate={lastLoginDate}
                 />
               </CardContent>
             </Card>
@@ -792,28 +702,11 @@ NetCooldown(netDuration);
                   gear={gear} 
                   onBuyGear={handleBuyGear} 
                   onUpgradeBoat={handleUpgradeBoat}
-                  onHireFisherman={handleHireFisherman}
                   boatLevel={boatLevel}
-                  fishermen={fishermen}
                 />
               </CardContent>
             </Card>
           </div>
-          <Card className="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
-            <CardHeader>
-              <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
-                <Users className="mr-2" /> Fishermen Management
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <FishermenManagement
-                money={money}
-                fishermen={fishermen}
-                fishermenSkills={fishermenSkills}
-                onUpgradeFisherman={handleUpgradeFisherman}
-              />
-            </CardContent>
-          </Card>
           <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
             <CardHeader>
               <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
@@ -824,7 +717,6 @@ NetCooldown(netDuration);
               <Metrics 
                 fishPerSecond={fishPerSecond} 
                 fishPerMinute={fishPerSecond * 60} 
-                fishermen={fishermen}
                 level={level}
                 xp={xp}
               />
