@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { format, isToday } from 'date-fns';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Fish, DollarSign, BarChart2, Bug } from 'lucide-react';
+import { Moon, Sun, Fish, DollarSign, BarChart2, Bug, Zap } from 'lucide-react';
 import FishPricesMenu from "@/components/FishPricesMenu";
+import confetti from 'canvas-confetti';
 
 const BASE_XP = 100;
 const XP_INCREMENT = 50;
@@ -249,6 +251,9 @@ const Index = () => {
     { id: 2, name: 'Player 2', fishCount: 800, moneyEarned: 4000 },
     { id: 3, name: 'Player 3', fishCount: 600, moneyEarned: 3000 },
   ]);
+  const [comboCount, setComboCount] = useState(0);
+  const [comboTimer, setComboTimer] = useState(null);
+  const [clickStreak, setClickStreak] = useState(0);
 
   const calculateCatchChance = () => {
     let baseChance = 0.5;
@@ -319,6 +324,11 @@ const Index = () => {
     const reward = baseReward * rewardMultiplier;
     setMoney(prevMoney => prevMoney + reward);
     toast.success(`Daily Reward: $${reward}! Login streak: ${loginStreak} day${loginStreak > 1 ? 's' : ''}`);
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
   };
 
   const handleFish = () => {
@@ -360,6 +370,11 @@ const Index = () => {
     if (specialFishCaught > 0) {
       const specialFishName = spot.specialFish[Math.floor(Math.random() * spot.specialFish.length)];
       toast.success(`You caught a ${specialFishName}! 🦈`);
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.7 }
+      });
     }
     if (rareFishCaught > 0) {
       const rareFishName = spot.rareFish[Math.floor(Math.random() * spot.rareFish.length)];
@@ -370,6 +385,23 @@ const Index = () => {
       toast.success(`You caught ${fishCaught} ${fishName}! 🐟`);
     }
     checkLocationChallenge(spot, fishCaught, rareFishCaught, specialFishCaught);
+    updateCombo();
+  };
+
+  const updateCombo = () => {
+    setComboCount(prevCount => prevCount + 1);
+    setClickStreak(prevStreak => prevStreak + 1);
+    if (comboTimer) clearTimeout(comboTimer);
+    const newTimer = setTimeout(() => {
+      setComboCount(0);
+      setClickStreak(0);
+    }, 2000);
+    setComboTimer(newTimer);
+    if (clickStreak > 0 && clickStreak % 10 === 0) {
+      const bonus = clickStreak * 5;
+      setMoney(prevMoney => prevMoney + bonus);
+      toast.success(`Click Streak Bonus: $${bonus}! 🔥`);
+    }
   };
 
   const checkLocationChallenge = (spot, fishCaught, rareFishCaught, specialFishCaught) => {
@@ -380,6 +412,11 @@ const Index = () => {
           if (newCount >= 100 && prev < 100) {
             toast.success("Challenge completed: Catch 100 Pond fish!");
             setMoney(prevMoney => prevMoney + 1000);
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 }
+            });
           }
           return newCount;
         });
@@ -389,6 +426,11 @@ const Index = () => {
           setGiantBassCaught(true);
           toast.success("Challenge completed: Catch a Giant Bass!");
           setMoney(prevMoney => prevMoney + 5000);
+          confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
         }
         break;
       case "River":
@@ -398,6 +440,11 @@ const Index = () => {
             if (newCount >= 10 && prev < 10) {
               toast.success("Challenge completed: Catch 10 Golden Sturgeons!");
               setMoney(prevMoney => prevMoney + 10000);
+              confetti({
+                particleCount: 200,
+                spread: 70,
+                origin: { y: 0.6 }
+              });
             }
             return newCount;
           });
@@ -408,6 +455,11 @@ const Index = () => {
           setGreatWhiteSharkCaught(true);
           toast.success("Challenge completed: Catch a Great White Shark!");
           setMoney(prevMoney => prevMoney + 50000);
+          confetti({
+            particleCount: 300,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
         }
         break;
     }
@@ -434,7 +486,15 @@ const Index = () => {
     if (currentXp >= xpNeededForNextLevel) {
       setLevel(prevLevel => {
         const newLevel = prevLevel + 1;
-        toast.success(`Level Up! You are now level ${newLevel}!`);
+        toast.success(`Level Up! You are now level ${newLevel}! 🎉`, {
+          duration: 5000,
+          icon: "🏆",
+        });
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
         return newLevel;
       });
       setXp(currentXp - xpNeededForNextLevel);
@@ -477,7 +537,17 @@ const Index = () => {
     setNetCatch({ small: 0, medium: 0, large: 0 });
     setTrapCatch({ common: 0, uncommon: 0, rare: 0 });
     checkAchievements();
-    toast.success(`Sold all catches for $${totalMoneyEarned.toFixed(2)}!`);
+    toast.success(`Sold all catches for $${totalMoneyEarned.toFixed(2)}! 💰`, {
+      duration: 3000,
+      icon: "💰",
+    });
+    if (totalMoneyEarned > 1000) {
+      confetti({
+        particleCount: Math.min(totalMoneyEarned / 10, 200),
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
   };
 
   const handleDevMoney = () => {
@@ -509,7 +579,17 @@ const Index = () => {
           large: prev.large + newCatch.large
         }));
         setNetCooldown(0);
-        toast.success(`Net pulled in! Caught ${catchAmount} creatures!`);
+        toast.success(`Net pulled in! Caught ${catchAmount} creatures! 🎣`, {
+          duration: 3000,
+          icon: "🕸️",
+        });
+        if (newCatch.large > 0) {
+          confetti({
+            particleCount: 50,
+            spread: 60,
+            origin: { y: 0.7 }
+          });
+        }
       }, netDuration * 1000);
     }
   };
@@ -538,7 +618,17 @@ const Index = () => {
           rare: prev.rare + newCatch.rare
         }));
         setTrapCooldown(0);
-        toast.success(`Trap checked! Caught ${catchAmount} big creatures!`);
+        toast.success(`Trap checked! Caught ${catchAmount} big creatures! 🦀`, {
+          duration: 3000,
+          icon: "🪤",
+        });
+        if (newCatch.rare > 0) {
+          confetti({
+            particleCount: 50,
+            spread: 60,
+            origin: { y: 0.7 }
+          });
+        }
       }, trapDuration * 1000);
     }
   };
@@ -555,6 +645,15 @@ const Index = () => {
           cost: Math.floor(item.cost * 1.5),
         },
       }));
+      toast.success(`Upgraded ${itemName} to level ${item.level + 1}! 🛠️`, {
+        duration: 3000,
+        icon: "🛠️",
+      });
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.7 }
+      });
     }
   };
 
@@ -563,6 +662,15 @@ const Index = () => {
     if (money >= cost) {
       setMoney(prevMoney => prevMoney - cost);
       setBoatLevel(prevLevel => prevLevel + 1);
+      toast.success(`Upgraded boat to level ${boatLevel + 1}! 🚤`, {
+        duration: 3000,
+        icon: "🚤",
+      });
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
     }
   };
 
@@ -574,6 +682,10 @@ const Index = () => {
         ...prevItems,
         [itemName]: { ...item, active: true },
       }));
+      toast.success(`Activated ${itemName} for ${item.duration} seconds! 🌟`, {
+        duration: 3000,
+        icon: "🌟",
+      });
     }
   };
 
@@ -587,7 +699,15 @@ const Index = () => {
         setMoney(prevMoney => prevMoney - spot.unlockCost);
         setUnlockedSpots(prevUnlocked => [...prevUnlocked, spotKey]);
         setCurrentSpot(spotKey);
-        toast.success(`Unlocked and moved to ${spot.name}!`);
+        toast.success(`Unlocked and moved to ${spot.name}! 🎉`, {
+          duration: 5000,
+          icon: "🎉",
+        });
+        confetti({
+          particleCount: 200,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
         checkAchievements();
       } else {
         toast.error(`Not enough money to unlock ${spot.name}. You need $${spot.unlockCost}.`);
@@ -625,7 +745,15 @@ const Index = () => {
     }
     if (achievementUnlocked) {
       setAchievements(newAchievements);
-      toast.success("Achievement Unlocked!");
+      toast.success("Achievement Unlocked! 🏆", {
+        duration: 5000,
+        icon: "🏆",
+      });
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
     }
   };
 
@@ -734,6 +862,18 @@ const Index = () => {
                   </Badge>
                 )
               )}
+            </CardContent>
+          </Card>
+          <Card className="lg:col-span-3 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
+                <Zap className="mr-2" /> Combo
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-center">{comboCount}x Combo</p>
+              <Progress value={(comboCount / 10) * 100} className="w-full mt-2" />
+              <p className="text-center mt-2">Click Streak: {clickStreak}</p>
             </CardContent>
           </Card>
           <div className="lg:col-span-3 flex justify-center mt-4">
