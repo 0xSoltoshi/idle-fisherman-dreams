@@ -57,9 +57,18 @@ const fishingSpots = {
 const Index = () => {
   const { theme, setTheme } = useTheme();
   const [plots, setPlots] = useState([]);
-  // ... (keep all other existing state variables)
-
-  // ... (keep all existing functions)
+  const [money, setMoney] = useState(0);
+  const [fish, setFish] = useState(0);
+  const [rareFish, setRareFish] = useState(0);
+  const [specialFish, setSpecialFish] = useState(0);
+  const [fishPerClick, setFishPerClick] = useState(1);
+  const [catchChance, setCatchChance] = useState(0.5);
+  const [currentSpot, setCurrentSpot] = useState('pond');
+  const [unlockedSpots, setUnlockedSpots] = useState(['pond']);
+  const [fishermen, setFishermen] = useState(0);
+  const [fishermenSkills, setFishermenSkills] = useState([]);
+  const [lastLoginDate, setLastLoginDate] = useState(null);
+  const [loginStreak, setLoginStreak] = useState(0);
 
   const handleBuyPlot = (x, y, cost) => {
     if (money >= cost) {
@@ -93,7 +102,13 @@ const Index = () => {
     return { fishCaught, rareFishCaught, specialFishCaught, totalCaught };
   };
 
-  // ... (keep all other existing functions)
+  const handleFish = () => {
+    const { fishCaught, rareFishCaught, specialFishCaught, totalCaught } = calculateCatches(1, currentSpot);
+    setFish(prev => prev + fishCaught);
+    setRareFish(prev => prev + rareFishCaught);
+    setSpecialFish(prev => prev + specialFishCaught);
+    toast.success(`Caught ${totalCaught} fish!`);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-200">
@@ -111,7 +126,62 @@ const Index = () => {
         </header>
 
         <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* ... (keep existing Card components) */}
+          <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
+                <Fish className="mr-2" /> Fishing Spot
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Select value={currentSpot} onValueChange={setCurrentSpot}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a fishing spot" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(fishingSpots).map(([key, spot]) => (
+                    <SelectItem key={key} value={key} disabled={!unlockedSpots.includes(key)}>
+                      {spot.name} {!unlockedSpots.includes(key) && `(Unlock: $${spot.unlockCost})`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button className="w-full mt-4" onClick={handleFish}>Fish!</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
+                <DollarSign className="mr-2" /> Inventory
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Money: ${money.toFixed(2)}</p>
+              <p>Fish: {fish}</p>
+              <p>Rare Fish: {rareFish}</p>
+              <p>Special Fish: {specialFish}</p>
+              <Button className="w-full mt-2">Sell All Fish</Button>
+              <FishPricesMenu fishPrices={{}} />
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
+                <Users className="mr-2" /> Fishermen
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Hired Fishermen: {fishermen}</p>
+              <Button className="w-full mt-2">Hire Fisherman ($100)</Button>
+              <FishermenManagement
+                money={money}
+                fishermen={fishermen}
+                fishermenSkills={fishermenSkills}
+                onUpgradeFisherman={() => {}}
+              />
+            </CardContent>
+          </Card>
 
           <Card className="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
             <CardHeader>
@@ -124,7 +194,20 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          {/* ... (keep other existing Card components) */}
+          <Card className="bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-100">
+                <BarChart2 className="mr-2" /> Stats
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Fish Per Click: {fishPerClick}</p>
+              <p>Catch Chance: {(catchChance * 100).toFixed(2)}%</p>
+              <p>Plots Owned: {plots.length}</p>
+              <p>Login Streak: {loginStreak} days</p>
+              <p>Last Login: {lastLoginDate ? format(new Date(lastLoginDate), 'PPP') : 'Never'}</p>
+            </CardContent>
+          </Card>
         </main>
       </div>
     </div>
