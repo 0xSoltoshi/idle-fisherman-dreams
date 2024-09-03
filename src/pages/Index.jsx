@@ -9,6 +9,7 @@ import { format, isToday } from 'date-fns';
 import { useTheme } from 'next-themes';
 import { Moon, Sun, Fish, DollarSign, BarChart2, Bug } from 'lucide-react';
 import FishPricesMenu from "@/components/FishPricesMenu";
+import AutoFisher from "@/components/AutoFisher";
 
 const BASE_XP = 100;
 const XP_INCREMENT = 50;
@@ -250,6 +251,12 @@ const Index = () => {
     { id: 3, name: 'Player 3', fishCount: 600, moneyEarned: 3000 },
   ]);
 
+  // Auto Fisher state
+  const [autoFisherActive, setAutoFisherActive] = useState(false);
+  const [autoFisherProgress, setAutoFisherProgress] = useState(0);
+  const [autoFisherLevel, setAutoFisherLevel] = useState(1);
+  const [autoFisherUpgradeCost, setAutoFisherUpgradeCost] = useState(1000);
+
   const calculateCatchChance = () => {
     let baseChance = 0.5;
     Object.values(gear).forEach(item => {
@@ -298,6 +305,23 @@ const Index = () => {
   useEffect(() => {
     checkDailyReward();
   }, []);
+
+  // Auto Fisher effect
+  useEffect(() => {
+    let interval;
+    if (autoFisherActive) {
+      interval = setInterval(() => {
+        setAutoFisherProgress(prev => {
+          if (prev >= 100) {
+            handleAutoFish();
+            return 0;
+          }
+          return prev + (autoFisherLevel / 10);
+        });
+      }, 100);
+    }
+    return () => clearInterval(interval);
+  }, [autoFisherActive, autoFisherLevel]);
 
   const checkDailyReward = () => {
     const today = new Date();
@@ -370,6 +394,14 @@ const Index = () => {
       toast.success(`You caught ${fishCaught} ${fishName}! 🐟`);
     }
     checkLocationChallenge(spot, fishCaught, rareFishCaught, specialFishCaught);
+  };
+
+  const handleAutoFish = () => {
+    const autoFishMultiplier = autoFisherLevel * 0.5;
+    handleFish();
+    for (let i = 0; i < autoFishMultiplier; i++) {
+      handleFish();
+    }
   };
 
   const checkLocationChallenge = (spot, fishCaught, rareFishCaught, specialFishCaught) => {
@@ -629,6 +661,21 @@ const Index = () => {
     }
   };
 
+  const handleToggleAutoFisher = () => {
+    setAutoFisherActive(prev => !prev);
+  };
+
+  const handleUpgradeAutoFisher = () => {
+    if (money >= autoFisherUpgradeCost) {
+      setMoney(prev => prev - autoFisherUpgradeCost);
+      setAutoFisherLevel(prev => prev + 1);
+      setAutoFisherUpgradeCost(prev => Math.floor(prev * 1.5));
+      toast.success(`Auto Fisher upgraded to level ${autoFisherLevel + 1}!`);
+    } else {
+      toast.error("Not enough money to upgrade Auto Fisher!");
+    }
+  };
+
   const { theme, setTheme } = useTheme();
 
   return (
@@ -734,6 +781,21 @@ const Index = () => {
                   </Badge>
                 )
               )}
+            </CardContent>
+          </Card>
+          <Card className="lg:col-span-3 bg-white dark:bg-gray-800 shadow-xl border-gray-200 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-xl text-gray-800 dark:text-gray-100">Auto Fisher</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AutoFisher
+                isActive={autoFisherActive}
+                progress={autoFisherProgress}
+                fishPerSecond={fishPerSecond * autoFisherLevel * 0.5}
+                onToggle={handleToggleAutoFisher}
+                upgradeCost={autoFisherUpgradeCost}
+                onUpgrade={handleUpgradeAutoFisher}
+              />
             </CardContent>
           </Card>
           <div className="lg:col-span-3 flex justify-center mt-4">
